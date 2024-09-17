@@ -1,0 +1,264 @@
+---
+title: "00_NHANES_LODs"
+output: html_document
+date: '2024-08-15'
+---
+
+# Calculation of detection frequencies 
+Detection frequencies of each chemical.  
+Using detection comments if directly available, or comments from a compiled dataset from kaggle if not: 
+https://www.kaggle.com/datasets/nguyenvy/nhanes-19882018?resource=download
+```{r}
+library(tidyverse)
+library(haven)
+load("NHANES_Exposures_Clean.RData")
+
+clock_dat <- read_sas("dnmepi.sas7bdat")
+clock_dat <- clock_dat %>% filter(SEQN %in% df$SEQN)
+```
+
+Phthalates
+```{r}
+varlist <- c("URXMBP","URXMCP","URXMEP","URXMHP","URXMNP","URXMOP","URXMZP","URXDAZ",
+             "URXDMA", "URXEQU","URXETD","URXETL","URXGNS","URXP09")
+commentlist <- paste0("URD", substr(varlist, 4, 6), "LC") # conversion between variable and comment code
+
+check <- read.csv("comments_clean.csv") 
+check <- check %>% filter(SEQN %in% clock_dat$SEQN)
+check <- check %>% 
+  select(SEQN, all_of(commentlist))
+
+sum_df <- cbind(varlist, commentlist, rep(77777, length(varlist)), rep(77777, length(varlist)))
+colnames(sum_df) <- c("Exposure", "Comment", "Detect", "Nondetect")
+
+for(i in 1:length(commentlist)){
+  
+  sub <- check[, c("SEQN", commentlist[i])]
+  sub <- na.omit(sub)
+  
+  if(length(table(sub[, 2])) > 2){
+    stop("Unexpected Values in Comment Code")
+  }
+  
+  sum_df[i, 3] <- length(which(sub[, 2] == 0))
+  sum_df[i, 4] <- length(which(sub[, 2] == 1))
+  
+}
+
+phthal <- sum_df
+
+```
+
+VOCs
+Detection comment codes found in main dataset. 
+```{r}
+varlist <- c("LBXV4C", "LBXVBF","LBXVBM",
+             "LBXVBZ","LBXVCF","LBXVCM","LBXVCT","LBXVDB","LBXVEB","LBXVME","LBXVOX",
+             "LBXVST", "LBXVTC","LBXVTO","LBXVXY")
+commentlist <- paste0("LBD", substr(varlist, 4, 6), "LC")
+
+sub <- df %>% 
+  select(all_of(commentlist))
+sum_df <- cbind(varlist, commentlist, rep(77777, length(varlist)), rep(77777, length(varlist)))
+colnames(sum_df) <- c("Exposure", "Comment", "Detect", "Nondetect")
+
+for(i in 1:length(commentlist)){
+  
+  if(length(table(sub[, i])) > 6){
+    stop("Unexpected Values in Comment Code") 
+  }
+  
+  # coded multiple versions of same variables
+  sum_df[i, 3] <- length(which(sub[, i] == 0)) + length(which(sub[, i] == "detectable result")) + 
+    length(which(sub[, i] == 2)) +  
+    length(which(sub[, i] == "detectable result and exceeds the calibrated range of assay"))
+  sum_df[i, 4] <- length(which(sub[, i] == 1)) + length(which(sub[, i] == "below detectable limit"))
+  
+}
+
+voc <- sum_df
+
+```
+
+Pesticides
+```{r}
+varlist <- c("URX24D", "URX25T","URXATZ","URXCBF",
+             "URXDEE","URXCPM","URXPAR",
+             "URXPPX","URXOP1","URXOP2","URXOP3","URXOP4","URXOP5","URXOP6","URX4FP",
+             "URXCB3","URXCCC","URXTCC","URXOPM")
+# URDDIZLC (URXDIZ) not present, manually add after
+commentlist <- paste0("URD", substr(varlist, 4, 6), "LC")
+
+check <- read.csv("comments_clean.csv") 
+check <- check %>% filter(SEQN %in% clock_dat$SEQN)
+check <- check %>% 
+  select(SEQN, all_of(commentlist))
+
+sum_df <- cbind(varlist, commentlist, rep(77777, length(varlist)), rep(77777, length(varlist)))
+colnames(sum_df) <- c("Exposure", "Comment", "Detect", "Nondetect")
+
+for(i in 1:length(commentlist)){
+  
+  sub <- check[, c("SEQN", commentlist[i])]
+  sub <- na.omit(sub)
+  
+  if(length(table(sub[, 2])) > 2){
+    stop("Unexpected Values in Comment Code")
+  }
+  
+  sum_df[i, 3] <- length(which(sub[, 2] == 0))
+  sum_df[i, 4] <- length(which(sub[, 2] == 1))
+  
+}
+
+pest <- sum_df
+
+# add missing pesticide (URDDIZLC (URXDIZ))
+pest <- rbind(pest, c("URXDIZ", "URDDIZLC", 
+                      table(df$URDDIZLC)[1], table(df$URDDIZLC)[2]))
+
+```
+
+Metals
+```{r}
+varlist <- c("URXUBA","URXUBE","URXUCO","URXUCS","URXUMO","URXUPB",
+             "URXUPT","URXUSB","URXUTL","URXUTU", "URDUCD")
+commentlist <- paste0("URD", substr(varlist, 4, 6), "LC")
+
+check <- read.csv("comments_clean.csv") 
+check <- check %>% filter(SEQN %in% clock_dat$SEQN)
+check <- check %>% 
+  select(SEQN, all_of(commentlist))
+
+sum_df <- cbind(varlist, commentlist, rep(77777, length(varlist)), rep(77777, length(varlist)))
+colnames(sum_df) <- c("Exposure", "Comment", "Detect", "Nondetect")
+
+for(i in 1:length(commentlist)){
+  
+  sub <- check[, c("SEQN", commentlist[i])]
+  sub <- na.omit(sub)
+  
+  if(length(table(sub[, 2])) > 2){
+    stop("Unexpected Values in Comment Code")
+  }
+  
+  sum_df[i, 3] <- length(which(sub[, 2] == 0))
+  sum_df[i, 4] <- length(which(sub[, 2] == 1))
+  
+}
+
+metals <- sum_df
+
+```
+
+Dioxins
+Detection comment codes found in main dataset. 
+```{r}
+varlist <- c("LBX052LA","LBX066LA", "LBX074LA",  "LBX099LA", "LBX101LA" ,"LBX105LA" ,
+             "LBX118LA", "LBX128LA" ,"LBX138LA", "LBX146LA", "LBX153LA" ,"LBX156LA",
+             "LBX157LA", "LBX167LA" ,"LBX170LA", "LBX172LA",  "LBX177LA" , "LBX178LA", 
+             "LBX180LA",  "LBX183LA" , "LBX187LA", "LBXD01LA",  "LBXD03LA" ,"LBXD04LA",
+             "LBXD05LA",  "LBXD07LA" ,"LBXF01LA",  "LBXF02LA",  "LBXF03LA" ,"LBXF04LA",
+             "LBXF05LA","LBXF06LA" ,"LBXF07LA", "LBXF08LA", "LBXF10LA" ,"LBXPCBLA", 
+             "LBXTC2LA", "LBXTCDLA" ,"LBXGHCLA", "LBXHCBLA",  "LBXHPELA","LBXHXCLA", 
+             "LBXMIRLA", "LBXODTLA","LBXOXYLA", "LBXPDELA", "LBXPDTLA","LBXTNALA")
+commentlist <- paste0("LBD", substr(varlist, 4, 6), "LC")
+sub <- df %>% 
+  select(all_of(commentlist))
+sum_df <- cbind(varlist, commentlist, rep(77777, length(varlist)), rep(77777, length(varlist)))
+colnames(sum_df) <- c("Exposure", "Comment", "Detect", "Nondetect")
+
+for(i in 1:length(commentlist)){
+  
+  if(length(table(sub[, i])) > 2){
+    stop("Unexpected Values in Comment Code")
+  }
+  
+  sum_df[i, 3] <- length(which(sub[, i] == 0))
+  sum_df[i, 4] <- length(which(sub[, i] == 1))
+  
+}
+
+dioxins <- sum_df
+
+```
+
+Cadmium, Lead, Mercury, Cotinine & Nutritional Biochemistries
+```{r}
+varlist <- c("LBXBPB","LBXBCD","LBXCOT")
+commentlist <- paste0("LBD", substr(varlist, 4, 6), "LC")
+
+check <- read.csv("comments_clean.csv") 
+check <- check %>% filter(SEQN %in% clock_dat$SEQN)
+check <- check %>% 
+  select(SEQN, all_of(commentlist))
+
+sum_df <- cbind(varlist, commentlist, rep(77777, length(varlist)), rep(77777, length(varlist)))
+colnames(sum_df) <- c("Exposure", "Comment", "Detect", "Nondetect")
+
+for(i in 1:length(commentlist)){
+  
+  sub <- check[, c("SEQN", commentlist[i])]
+  sub <- na.omit(sub)
+  sub <- sub %>% distinct(SEQN, .keep_all = TRUE) 
+  
+  if(length(table(sub[, 2])) > 2){
+    stop("Unexpected Values in Comment Code")
+  }
+  
+  sum_df[i, 3] <- length(which(sub[, 2] == 0))
+  sum_df[i, 4] <- length(which(sub[, 2] == 1))
+  
+}
+
+cad <- sum_df
+
+```
+
+Perfluoroalkyl Chemicals (not used for primary analysis)
+```{r}
+varlist <- c("SEPAH","SMPAH","SPFDE","SPFDO",
+             "SPFHP","SPFHS","SPFNA","SPFOA",
+             "SPFOS","SPFSA","SPFUA")
+commentlist <- paste0(substr(varlist, 1, 5), "LC")
+sub <- df %>% 
+  select(all_of(commentlist))
+sum_df <- cbind(varlist, commentlist, rep(77777, length(varlist)), rep(77777, length(varlist)))
+colnames(sum_df) <- c("Exposure", "Comment", "Detect", "Nondetect")
+
+for(i in 1:length(commentlist)){
+  
+  if(length(table(sub[, i])) > 2){
+    stop("Unexpected Values in Comment Code")
+  }
+  
+  sum_df[i, 3] <- length(which(sub[, i] == 0))
+  sum_df[i, 4] <- length(which(sub[, i] == 1))
+  
+}
+
+pfas <- sum_df
+
+```
+
+
+# Merge All Data
+```{r}
+sums <- rbind(phthal, voc, pest, metals, dioxins, cad, pfas)
+sums <- as.data.frame(sums)
+sums$Detect <- as.numeric(sums$Detect)
+sums$Nondetect <- as.numeric(sums$Nondetect)
+
+sums$detect_freq <- sums$Detect / (sums$Detect + sums$Nondetect)
+sums$keep <- ifelse(sums$detect_freq >= 0.5, "Keep", "Drop")
+sums$pfas_flag <- ifelse(sums$Exposure %in% pfas[, 1], "PFAS", "")
+
+# creatinine-adjustment flags
+sums$creatinine <- ifelse(sums$Exposure %in% phthal[, 1], "URXUCR.x", 
+                    ifelse(sums$Exposure %in% pest[, 1], "URXUCR.y",
+                           ifelse(sums$Exposure %in% metals[, 1], "URXUCR", "")))
+
+
+write.csv(sums, file = "NHANES_LODs.csv")
+```
+
