@@ -1,0 +1,286 @@
+---
+title: "00_NHANES_Dataset_Formation_Upload"
+output: html_document
+date: '2024-09-16'
+---
+
+Primary Dataset accession using the nhanesA package in R.  
+Last updated 2024-09-16  
+```{r}
+library(nhanesA)
+
+tabs_99 = nhanesTables('LAB',1999,details = T)
+tabs_99 = rbind(tabs_99, nhanesTables('DEMO',1999, details = T))
+tabs_99 = rbind(tabs_99, nhanesTables('Q',1999, details = T))
+tabs_99$Component = toupper(tabs_99$Component)
+
+tabs_01 = nhanesTables('LAB',2001, details = T)
+tabs_01 = rbind(tabs_01, nhanesTables('DEMO',2001, details = T))
+tabs_01 = rbind(tabs_01, nhanesTables('Q',2001, details = T))
+tabs_01$Component = toupper(tabs_01$Component)
+
+tablist_99 = lapply(tabs_99$Data.File.Name, nhanes)
+names(tablist_99) = tabs_99$Data.File.Name
+
+tablist_01 = lapply(tabs_01$Data.File.Name, nhanes)
+names(tablist_01) = tabs_01$Data.File.Name
+
+dictlist_99 = lapply(1:nrow(tabs_99), function(i){
+  nhanesTableVars(tabs_99$Component[i], tabs_99$Data.File.Name[i], nchar = 500)
+  })
+
+dictlist_01 = lapply(1:nrow(tabs_01), function(i){
+  nhanesTableVars(tabs_01$Component[i], tabs_01$Data.File.Name[i], nchar = 500)
+  }) 
+
+names(dictlist_99) = tabs_99$Data.File.Name
+names(dictlist_01) = tabs_01$Data.File.Name
+
+trans_tables_99 = lapply(1:nrow(tabs_99), function(i) nhanesTranslate(tabs_99$Data.File.Name[i], colnames(tablist_99[[i]]),
+                                                                     data = tablist_99[[i]], mincategories = 1, nchar = 100))
+
+trans_tables_01 = lapply(1:nrow(tabs_01), function(i) nhanesTranslate(tabs_01$Data.File.Name[i], colnames(tablist_01[[i]]),
+                                                                      data = tablist_01[[i]], mincategories = 1, nchar = 100))
+
+names(trans_tables_99) = tabs_99$Data.File.Name
+names(trans_tables_01) = tabs_01$Data.File.Name
+
+# Create subsets for subjects stratified by age<50, age>=50
+## start with demographic data
+dat99 = trans_tables_99$DEMO
+dat01 = trans_tables_01$DEMO_B
+
+dat99_0_50 = subset(dat99, RIDAGEYR < 50)
+dat99_50_85 = subset(dat99, RIDAGEYR >= 50)
+
+dat01_0_50 = subset(dat01, RIDAGEYR < 50)
+dat01_50_85 = subset(dat01, RIDAGEYR >= 50)
+
+# Append phthalates data
+dat99_0_50 = merge(dat99_0_50, trans_tables_99$PHPYPA, by = 'SEQN', all.x = T)
+dat99_50_85 = merge(dat99_50_85, trans_tables_99$PHPYPA, by = 'SEQN', all.x = T)
+
+dat01_0_50 = merge(dat01_0_50, trans_tables_01$PHPYPA_B, by = 'SEQN', all.x = T)
+dat01_50_85 = merge(dat01_50_85, trans_tables_01$PHPYPA_B, by = 'SEQN', all.x = T)
+
+# Append voc blood and water data
+dat99_0_50 = merge(dat99_0_50, trans_tables_99$LAB04, by = 'SEQN', all.x = T)
+dat99_50_85 = merge(dat99_50_85, trans_tables_99$LAB04, by = 'SEQN', all.x = T)
+
+dat01_0_50 = merge(dat01_0_50, trans_tables_01$L04VOC_B, by = 'SEQN', all.x = T)
+dat01_50_85 = merge(dat01_50_85, trans_tables_01$L04VOC_B, by = 'SEQN', all.x = T)
+
+# Append voc personal exposure data
+dat99_0_50 = merge(dat99_0_50, trans_tables_99$LAB21, by = 'SEQN', all.x = T)
+dat99_50_85 = merge(dat99_50_85, trans_tables_99$LAB21, by = 'SEQN', all.x = T)
+
+# Append urinary pesticides data
+dat99_0_50 = merge(dat99_0_50, trans_tables_99$LAB26PP, by = 'SEQN', all.x = T)
+dat99_50_85 = merge(dat99_50_85, trans_tables_99$LAB26PP, by = 'SEQN', all.x = T)
+
+dat01_0_50 = merge(dat01_0_50, trans_tables_01$l26PP_B, by = 'SEQN', all.x = T)
+dat01_50_85 = merge(dat01_50_85, trans_tables_01$l26PP_B, by = 'SEQN', all.x = T)
+
+# Append urinary metals data
+dat99_0_50 = merge(dat99_0_50, trans_tables_99$LAB06HM, by = 'SEQN', all.x = T)
+dat99_50_85 = merge(dat99_50_85, trans_tables_99$LAB06HM, by = 'SEQN', all.x = T)
+
+dat01_0_50 = merge(dat01_0_50, trans_tables_01$L06HM_B, by = 'SEQN', all.x = T)
+dat01_50_85 = merge(dat01_50_85, trans_tables_01$L06HM_B, by = 'SEQN', all.x = T)
+
+# Append pfas data
+dat99_0_50 = merge(dat99_0_50, trans_tables_99$SSPFC_A, by = 'SEQN', all.x = T)
+dat99_50_85 = merge(dat99_50_85, trans_tables_99$SSPFC_A, by = 'SEQN', all.x = T)
+
+# Append cadmium, lead, mercury, cotinine, and nutritional biochem
+dat99_0_50 = merge(dat99_0_50, trans_tables_99$LAB06, by = 'SEQN', all.x = T)
+dat99_50_85 = merge(dat99_50_85, trans_tables_99$LAB06, by = 'SEQN', all.x = T)
+
+dat01_0_50 = merge(dat01_0_50, trans_tables_01$L06_B, by = 'SEQN', all.x = T)
+dat01_50_85 = merge(dat01_50_85, trans_tables_01$L06_B, by = 'SEQN', all.x = T)
+
+# save intermediate files
+save(trans_tables_99, trans_tables_01, file = 'translated_tables.RData')
+save(tabs_01, tabs_99, tablist_01, tablist_99, dictlist_99, dictlist_01, 
+     file = 'tables_and_dictionaries.RData')
+save(dat99_0_50, dat99_50_85, dat01_0_50, dat01_50_85, file = 'compiled_tables_dnaM_subjects.RData')
+```
+
+Add covariates and remaining exposures.  
+XPT Files accessed directly from NHANES website.  
+```{r}
+library(haven)
+library(tidyverse)
+library(Metrics)
+library(gridExtra)
+library(survey) 
+library(forcats)
+library(ggsci)
+set.seed(999)
+
+load("compiled_tables_dnaM_subjects.RData")
+# combining age stratified data.frames 
+# Done for consistency, not actually necessary because youngest participants were 50
+dat99 <- rbind(dat99_0_50, dat99_50_85)
+dat01 <- rbind(dat01_0_50, dat01_50_85)
+# focusing analysis on exposures found at both cycles
+subs <- intersect(colnames(dat99), colnames(dat01))
+dat99 <- dat99 %>% select(all_of(subs))
+dat01 <- dat01 %>% select(all_of(subs))
+dat_both <- rbind(dat99, dat01)
+
+# clocks dataset
+# https://wwwn.cdc.gov/nchs/nhanes/dnam/
+clocks <- read_sas("dnmepi.sas7bdat") # 2532 true sample size
+df <- left_join(clocks, dat_both, by = "SEQN")
+rm(list = setdiff(ls(), c("df")))
+
+# add BMI data 
+# https://wwwn.cdc.gov/Nchs/Nhanes/1999-2000/BMX.htm
+# https://wwwn.cdc.gov/Nchs/Nhanes/2001-2002/BMX_B.htm
+bmi_1999 <- read_xpt("BMX.XPT") 
+bmi_2001 <- read_xpt("BMX_B.XPT")
+subs <- intersect(colnames(bmi_1999), colnames(bmi_2001))
+bmi_1999 <- bmi_1999 %>% select(all_of(subs))
+bmi_2001 <- bmi_2001 %>% select(all_of(subs))
+bmi <- rbind(bmi_1999, bmi_2001)
+bmi <- bmi %>% select(SEQN, BMXBMI)
+df <- left_join(df, bmi, by = "SEQN")
+rm(list = setdiff(ls(), c("df")))
+
+# add dioxin data
+# https://wwwn.cdc.gov/Nchs/Nhanes/1999-2000/LAB28POC.htm
+# https://wwwn.cdc.gov/Nchs/Nhanes/2001-2002/L28POC_B.htm
+dio_1999 <- read_xpt("LAB28POC.XPT")
+dio_2001 <- read_xpt("L28POC_B.XPT")
+subs <- intersect(colnames(dio_1999), colnames(dio_2001))
+dio_1999 <- dio_1999 %>% select(all_of(subs))
+dio_2001 <- dio_2001 %>% select(all_of(subs))
+dio <- rbind(dio_1999, dio_2001)
+df <- left_join(df, dio, by = "SEQN")
+rm(list = setdiff(ls(), c("df")))
+
+# add PFAS (only measured in 1999-2001)
+# https://wwwn.cdc.gov/Nchs/Nhanes/1999-2000/SSPFC_A.htm
+pfas <- read_xpt("SSPFC_A.XPT")
+df <- left_join(df, pfas, by = "SEQN")
+rm(pfas)
+
+# add smoking 
+# https://wwwn.cdc.gov/Nchs/Nhanes/1999-2000/SMQ.htm 
+# https://wwwn.cdc.gov/Nchs/Nhanes/2001-2002/SMQ_B.htm 
+smoke_1999 <- read_xpt("SMQ.XPT")
+smoke_2001 <- read_xpt("SMQ_B.XPT")
+subs <- intersect(colnames(smoke_1999), colnames(smoke_2001))
+smoke_1999 <- smoke_1999 %>% select(all_of(subs))
+smoke_2001 <- smoke_2001 %>% select(all_of(subs))
+smoke <- rbind(smoke_1999, smoke_2001)
+df <- left_join(df, smoke, by = "SEQN")
+# create an current, ever, never smoking category
+# SMQ020: 1 defines ever smoking
+# SMQ040: Do you now smoke cigarettes: 1 indicates every, 2 indicates some days 
+df <- df %>% 
+  mutate(SMOKE_3cat = ifelse(SMQ020 == 2, "Never", 
+                      ifelse(SMQ020 == 1  & SMQ040 == 1 | SMQ040 == 2, "Current", 
+                      ifelse(SMQ020 == 1  & SMQ040 == 3, "Former", NA))))
+df <- df %>% 
+  mutate(SMOKE_2cat = ifelse(SMQ020 == 2, "Never", 
+                      ifelse(SMQ020 == 1, "Ever", NA)))
+
+# recoded income covariate (binary <20,000 vs >= 20,000)
+df <- df %>% 
+  mutate(INCOME = ifelse(INDFMINC == "$     0 to $ 4,999" | INDFMINC == "$ 5,000 to $ 9,999" | 
+                 INDFMINC == "$10,000 to $14,999" | INDFMINC == "$15,000 to $19,999" | 
+                 INDFMINC == "Under $20,000", "< $20,000", 
+             ifelse(INDFMINC == "$20,000 to $24,999" | INDFMINC == "$25,000 to $34,999" | 
+                    INDFMINC == "$35,000 to $44,999" | INDFMINC == "$45,000 to $54,999" | 
+                    INDFMINC == "$55,000 to $64,999" | INDFMINC == "$65,000 to $74,999" | 
+                    INDFMINC == "$75,000 and Over" | INDFMINC == "Over $20,000", 
+                    ">= $20,000", NA)))
+# recode education
+df$EDUCATION <- ifelse(df$DMDEDUC == "Less Than High School", "Less Than High School",
+                  ifelse(df$DMDEDUC == "High School Diploma (including GED)", "High School Diploma (including GED)",
+                  ifelse(df$DMDEDUC == "More Than High School", "More Than High School", NA)))
+
+# name conversion guide 
+# stored as a large list
+load("tables_and_dictionaries.RData")
+dict <- rbind(dictlist_99$DEMO, dictlist_99$SMQ, 
+  dictlist_99$PHPYPA, dictlist_99$LAB04, dictlist_99$LAB06, dictlist_99$LAB06HM, 
+                dictlist_99$LAB26PP, dictlist_99$LAB28POC)
+dict$Dataset <- c(rep("Demographics", nrow(dictlist_99$DEMO)),
+                  rep("Smoking", nrow(dictlist_99$SMQ)),
+                  rep("Phthalates, Phytoestrogens & PAHs - Urine (PHPYPA)",
+                      nrow(dictlist_99$PHPYPA)), 
+                  rep("Volatile Organic Compounds - Blood & Water (LAB04)", 
+                      nrow(dictlist_99$LAB04)), 
+                  rep("Cadmium, Lead, Mercury, Cotinine & Nutritional Biochemistries (LAB06)",
+                      nrow(dictlist_99$LAB06)), 
+                  rep("Metals - Urine (LAB06HM)", nrow(dictlist_99$LAB06HM)),
+                  rep("Pesticides - Current Use - Urine (LAB26PP)", nrow(dictlist_99$LAB26PP)), 
+                  rep("Dioxins, Furans, & Coplanar PCBs (LAB28POC)", nrow(dictlist_99$LAB28POC)))
+dict <- dict %>% rename(exposure = Variable.Name)
+rm(list = setdiff(ls(), c("df", "dict")))
+
+# calculate acceleration measures
+## subset to participants who are not labeled as 85 years of age
+df <- df %>% filter(RIDAGEYR != 85) ## subset to complete clock data (half of clock dataset not actually profiled)
+df <- df %>% filter(!is.na(HorvathAge))
+## only considering following clocks for analysis
+## "HorvathAge","HannumAge","SkinBloodAge","PhenoAge",
+## "GrimAgeMort","GrimAge2Mort","HorvathTelo", "DunedinPoAm" 
+df$Horvath_AA <- resid(glm(df$HorvathAge ~ df$RIDAGEYR))
+df$Hannum_AA <- resid(glm(df$HannumAge ~ df$RIDAGEYR))
+df$SkinBlood_AA <- resid(glm(df$SkinBloodAge ~ df$RIDAGEYR))
+df$PhenoAge_AA <- resid(glm(df$PhenoAge ~ df$RIDAGEYR))
+df$GrimAge_AA <- resid(glm(df$GrimAgeMort ~ df$RIDAGEYR))
+df$GrimAge2_AA <- resid(glm(df$GrimAge2Mort ~ df$RIDAGEYR))
+df$HorvathTelo_AA <- resid(glm(df$HorvathTelo ~ df$RIDAGEYR))
+### leaving DunedinPoAm untransformed
+
+
+# add recoded occupation (coding based on white v blue collar coding)
+occ_1999 <- read_xpt("OCQ.XPT")
+occ_2001 <- read_xpt("OCQ_B.XPT")
+subs <- intersect(colnames(occ_1999), colnames(occ_2001))
+occ_1999 <- occ_1999 %>% select(all_of(subs))
+occ_2001 <- occ_2001 %>% select(all_of(subs))
+occ <- rbind(occ_1999, occ_2001)
+# creating 5 category occupational classification as used in Rehkopf et al, BMC Public Health 2006;
+# based on two dimensions of occupation, white-collar versus blue collar and technical skill;
+# based conceptually on the NS-SEC job classification
+occ$hiwhite <- ifelse((occ$OCD390 %in% c(1:7,9,25)),1,0) 
+occ$hiwhite[is.na(occ$OCD390)] <- NA
+occ$lowwhite <- ifelse((occ$OCD390 %in% c(8,10,12:16,22)),1,0) 
+occ$lowwhite[is.na(occ$OCD390)] <- NA
+occ$hiblue <- ifelse((occ$OCD390 %in% c(28:31,41)),1,0) 
+occ$hiblue[is.na(occ$OCD390)] <- NA
+occ$lowblue <- ifelse((occ$OCD390 %in% c(11,17:21,23,24,26,27,32:40)),1,0) 
+occ$lowblue[is.na(occ$OCD390)] <- NA
+occ$nowork <- ifelse(occ$OCD390==98,1,0) 
+occ$nowork[is.na(occ$OCD390)] <- NA
+
+# Use ocd 240 current job to fill the missing
+occ$hiwhite[occ$OCD240 %in% c(1:7,9,25) & is.na(occ$hiwhite)] <- 1
+occ$hiwhite[occ$OCD240 %in% c(1:41,98) & is.na(occ$hiwhite)] <- 0
+occ$lowwhite[occ$OCD240 %in% c(8,10,12:16,22) & is.na(occ$lowwhite)] <- 1
+occ$lowwhite[occ$OCD240 %in% c(1:41,98) & is.na(occ$lowwhite)] <- 0
+occ$hiblue[occ$OCD240 %in% c(28:31,41) & is.na(occ$hiblue)] <- 1
+occ$hiblue[occ$OCD240 %in% c(1:41,98) & is.na(occ$hiblue)] <- 0
+occ$lowblue[occ$OCD240 %in% c(11,17:21,23,24,26,27,32:40) & is.na(occ$lowblue)] <- 1
+occ$lowblue[occ$OCD240 %in% c(1:41,98) & is.na(occ$lowblue)] <- 0
+occ$nowork[occ$OCD240 == 98 & is.na(occ$nowork)] <- 1
+occ$nowork[occ$OCD240 %in% c(1:41,98) & is.na(occ$nowork)] <- 0
+
+occ <- occ %>% 
+  mutate(OCCUPATION = ifelse(hiwhite == 1, "hiwhite", 
+                      ifelse(lowwhite == 1, "lowwhite", 
+                      ifelse(hiblue == 1, "hiblue", 
+                      ifelse(lowblue == 1, "lowblue", 
+                      ifelse(nowork == 1, "nowork", NA)))))) %>% 
+  select(SEQN, OCCUPATION)
+df <- left_join(df, occ, by = "SEQN")
+
+save(df, dict, file = "NHANES_Exposures_Clean.RData")
+```
+
