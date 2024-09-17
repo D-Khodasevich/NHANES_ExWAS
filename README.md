@@ -1,1 +1,3 @@
-Code for running the NHNAES exposome-wide association study on epigenetic aging. 
+Code for running the NHANES exposome-wide association study on epigenetic aging. 
+
+Will update with actual readme
