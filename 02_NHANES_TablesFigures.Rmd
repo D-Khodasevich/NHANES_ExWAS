@@ -1,0 +1,1681 @@
+---
+title: "02_NHANES_TablesFigures"
+output: html_document
+date: '2024-08-15'
+---
+
+# Table 1
+Demographics for sample with clock data and complete covariate data.  
+```{r}
+library(tableone)
+
+load("NHANES_Exposures_Clean.RData")
+myVars <- c("RIDAGEYR", "BMXBMI", "RIAGENDR", "RIDRETH1", "INDFMPIR", 
+            "EDUCATION", "OCCUPATION", "SMOKE_3cat") 
+catVars <- c("RIAGENDR", "RIDRETH1", "SMOKE_3cat", "EDUCATION", "OCCUPATION")
+## Create a TableOne object
+tab1 <- CreateTableOne(vars = myVars, data = df, factorVars = catVars)
+print(tab1, showAllLevels = TRUE, type = "markdown")
+```
+
+# Clock Figures
+
+## Assess Fit to Chronological Age
+```{r, , fig.width=11, fig.height=11}
+
+# df$RIDAGEYR age variable in years
+a <- ggplot(df, aes(x = RIDAGEYR, y = HorvathAge)) + 
+  geom_point(alpha = 0.5, color = "darkblue") + 
+  theme_bw() + xlab("Age (Years)") + 
+  ylab("Horvath Age") + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$HorvathAge), digits = 2), nsmall = 2), 
+                 ", ", 
+          "MAE = ", format(round(mdae(df$RIDAGEYR, df$HorvathAge), digits = 2), nsmall = 2))) + 
+  geom_abline(intercept = 0, slope = 1, linewidth = 2) + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title = element_text(size = 14, face = "bold")) 
+
+b <- ggplot(df, aes(x = RIDAGEYR, y = HannumAge)) + 
+  geom_point(alpha = 0.5, color = "darkblue") + 
+  theme_bw() + xlab("Age (Years)") + 
+  ylab("Hannum Age") + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$HannumAge), digits = 2), nsmall = 2), 
+                 ", ", 
+          "MAE = ", format(round(mdae(df$RIDAGEYR, df$HannumAge), digits = 2), nsmall = 2))) + 
+  geom_abline(intercept = 0, slope = 1, linewidth = 2) + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title = element_text(size = 14, face = "bold")) 
+
+c <- ggplot(df, aes(x = RIDAGEYR, y = SkinBloodAge)) + 
+  geom_point(alpha = 0.5, color = "darkblue") + 
+  theme_bw() + xlab("Age (Years)") + 
+  ylab("Skin&Blood Age") + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$SkinBloodAge), digits = 2), nsmall = 2), 
+                 ", ", 
+          "MAE = ", format(round(mdae(df$RIDAGEYR, df$SkinBloodAge), digits = 2), nsmall = 2))) + 
+  geom_abline(intercept = 0, slope = 1, linewidth = 2) + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title = element_text(size = 14, face = "bold")) 
+
+d <- ggplot(df, aes(x = RIDAGEYR, y = PhenoAge)) + 
+  geom_point(alpha = 0.5, color = "darkblue") + 
+  theme_bw() + xlab("Age (Years)") + 
+  ylab("PhenoAge") +  
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$PhenoAge), digits = 2), nsmall = 2), 
+                 ", ", 
+          "MAE = ", format(round(mdae(df$RIDAGEYR, df$PhenoAge), digits = 2), nsmall = 2))) + 
+  geom_abline(intercept = 0, slope = 1, linewidth = 2) + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title = element_text(size = 14, face = "bold")) 
+
+e <- ggplot(df, aes(x = RIDAGEYR, y = GrimAgeMort)) + 
+  geom_point(alpha = 0.5, color = "darkblue") + 
+  theme_bw() + xlab("Age (Years)") + 
+  ylab("GrimAge") + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$GrimAgeMort), digits = 2), nsmall = 2), 
+                 ", ", 
+          "MAE = ", format(round(mdae(df$RIDAGEYR, df$GrimAgeMort), digits = 2), nsmall = 2))) + 
+  geom_abline(intercept = 0, slope = 1, linewidth = 2) + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title = element_text(size = 14, face = "bold")) 
+
+f <- ggplot(df, aes(x = RIDAGEYR, y = GrimAge2Mort)) + 
+  geom_point(alpha = 0.5, color = "darkblue") + 
+  theme_bw() + xlab("Age (Years)") + 
+  ylab("GrimAge2") + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$GrimAge2Mort), digits = 2), nsmall = 2), 
+                 ", ", 
+          "MAE = ", format(round(mdae(df$RIDAGEYR, df$GrimAge2Mort), digits = 2), nsmall = 2))) + 
+  geom_abline(intercept = 0, slope = 1, linewidth = 2) + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title = element_text(size = 14, face = "bold")) 
+
+g <- ggplot(df, aes(x = RIDAGEYR, y = HorvathTelo)) + 
+  geom_point(alpha = 0.5, color = "darkblue") + 
+  theme_bw() + xlab("Age (Years)") + 
+  ylab("DNAmTL") + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$HorvathTelo), digits = 2), nsmall = 2), 
+                 ", ", 
+          "MAE = ", format(round(mdae(df$RIDAGEYR, df$HorvathTelo), digits = 2), nsmall = 2))) + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title = element_text(size = 14, face = "bold")) 
+
+h <- ggplot(df, aes(x = RIDAGEYR, y = DunedinPoAm)) + 
+  geom_point(alpha = 0.5, color = "darkblue") + 
+  theme_bw() + xlab("Age (Years)") + 
+  ylab("DunedinPoAm") + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$DunedinPoAm), digits = 2), nsmall = 2), 
+                 ", ", 
+          "MAE = ", format(round(mdae(df$RIDAGEYR, df$DunedinPoAm), digits = 2), nsmall = 2))) + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title = element_text(size = 14, face = "bold")) 
+
+grid.arrange(a,b,c,d,e,f,g,h, nrow=3)
+gro <- arrangeGrob(a,b,c,d,e,f,g,h, nrow=3)
+ggsave(gro, filename = "Manuscript/NHANES_Figure1.png", height = 8, width = 8, dpi = 300)
+```
+
+## Assess Correlation between Clock Acceleration Measures
+```{r}
+library(corrplot)
+
+clocks <- c("Horvath_AA", "Hannum_AA", "SkinBlood_AA", "PhenoAge_AA", 
+            "GrimAge_AA", "GrimAge2_AA", "HorvathTelo_AA", "DunedinPoAm")
+
+plot_sub <- df %>% 
+  select(all_of(clocks))
+
+corr <- round(cor(plot_sub), 2)
+
+png(filename = "Manuscript/NHANES_FigureS1.png", height = 8, width = 8, units = "in", res = 300)
+corrplot(corr, 
+           method = "color", tl.col = "black", addCoef.col = 'white',
+           type = "lower", diag = FALSE)
+dev.off()
+```
+
+
+# Exposure Tables and Figures
+
+## LOD and Exposure Summary Table
+```{r}
+load("NHANES_Exposures_Clean.RData")
+
+lod <- read.csv("NHANES_LODs.csv")
+lod <- lod %>% filter(pfas_flag == "")
+varlist <- lod$Exposure
+
+# specify survey design
+nhanesDesign <- svydesign(id = ~SDMVPSU,  # Primary Sampling Units (PSU)
+                          strata  = ~SDMVSTRA, # Stratification used in the survey
+                          weights = ~WTDN4YR,   # Survey weights (using those from DNAm dataset)
+                          nest    = TRUE,      # Whether PSUs are nested within strata
+                          data    = df)
+
+counter = 0
+for(i in 1:length(varlist)){
+  
+  cur_exposure <- varlist[i]
+  df_sub <- df
+  
+  # create new variable name for easier model specs
+  nhanesDesign[["variables"]]$cur_measure <- unlist(nhanesDesign[["variables"]][varlist[i]]) 
+  df_sub$cur_measure <- unlist(df_sub[, varlist[i]])
+  
+  nhanesDesign[["variables"]]$cur_measure <- as.numeric(nhanesDesign[["variables"]]$cur_measure)
+  df_sub$cur_measure <- as.numeric(df_sub$cur_measure)
+
+  # calculate basic summary stats
+  meansums <- as.data.frame(svymean(~ cur_measure, nhanesDesign, na.rm=TRUE))
+  colnames(meansums) <- c("mean", "SE")
+  quants <- svyquantile(~ cur_measure, nhanesDesign, c(0, 0.25, 0.5, 0.75, 1), na.rm=TRUE)[[1]]
+  meansums$actual_mean <- mean(df_sub$cur_measure, na.rm = TRUE)
+  meansums$actual_se <- sd(df_sub$cur_measure, na.rm = TRUE) / sqrt(nrow(df_sub))
+  meansums$quant_00 <- quants[1,1]
+  meansums$quant_25 <- quants[2,1] 
+  meansums$quant_50 <- quants[3,1]
+  meansums$quant_75 <- quants[4,1]   
+  meansums$quant_100 <- quants[5,1]  
+
+  meansums$Exposure <- cur_exposure
+    
+  counter = counter + 1
+  if(counter == 1){
+      fullsum <- meansums
+    } else{
+      fullsum <- rbind(fullsum, meansums)
+    }
+}
+
+fullsum <- left_join(fullsum, lod, by = "Exposure")
+fullsum$exposure <- fullsum$Exposure
+fullsum <- left_join(fullsum, dict, by = "exposure")
+
+load("NHANES_Model_Summaries.RData")
+no_cell <- no_cell%>% filter(clock == "GrimAge_AA") %>% select(exposure, N) 
+fullsum <- left_join(fullsum, no_cell, by = "exposure")
+
+library(xlsx)
+fullsum <- fullsum %>% 
+  arrange(desc(detect_freq)) %>% 
+  select(Exposure, Variable.Description, Dataset, N, detect_freq, mean, SE, 
+         quant_00, quant_25, quant_50, quant_75, quant_100)
+write.xlsx(fullsum, file="Manuscript/NHANES_ExWAS_EAA_SupplementalTables.xlsx", 
+           sheetName="TableS1", row.names=FALSE)
+
+```
+
+
+## Exposure Correlation Figure
+0 overlap between some measures. Dataset category labels added manually after. 
+```{r}
+load("NHANES_Exposures_Clean.RData")
+lod <- read.csv("NHANES_LODs.csv")
+lod <- lod %>% filter(keep == "Keep"  & pfas_flag == "")
+varlist <- lod$Exposure
+
+plot_sub <- df %>% 
+  select(all_of(varlist))
+plot_sub$URXP09 <- as.numeric(plot_sub$URXP09)
+
+plot_sub <- log2(plot_sub)
+
+corr <- round(cor(plot_sub, use = "pairwise.complete.obs"), 2)
+
+png(filename = "Manuscript/NHANES_FigureS2.png", height = 12, width = 12, units = "in", res = 300)
+corrplot(corr, 
+           method = "color", tl.col = "black",
+           type = "lower", na.label = ".", diag = FALSE, na.label.col = "black")
+dev.off()
+```
+
+
+# Effect Estimate Plots 
+```{r}
+library(tidyverse)
+library(ggsci)
+library(ggpubr)
+load("NHANES_Model_Summaries.RData")
+```
+
+
+## Primary GrimAge Plots (Main)
+```{r}
+no_cell$p_bon_strict <- p.adjust(no_cell$pval, method = "bonferroni")
+no_cell <- no_cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 64)) %>% ungroup()
+no_cell$exposuretag <- ifelse(no_cell$p_bon_relax < 0.05, no_cell$exposure, "")
+cell$p_bon_strict <- p.adjust(cell$pval, method = "bonferroni")
+cell <- cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 64)) %>% ungroup()
+cell$exposuretag <- ifelse(cell$p_bon_relax < 0.05, cell$exposure, "")
+
+spl <- split(no_cell, no_cell$clock)
+a <- spl$GrimAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_x_continuous(limits = c(-0.6, 1.3)) + 
+  scale_y_continuous(limits = c(0, 8)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$GrimAge_AA$Estimate) - min(spl$GrimAge_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$GrimAge_AA$Estimate) - min(spl$GrimAge_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12))
+
+
+spl <- split(cell, cell$clock)
+b <- spl$GrimAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_x_continuous(limits = c(-0.6, 1.3)) + 
+  scale_y_continuous(limits = c(0, 8)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$GrimAge_AA$Estimate) - min(spl$GrimAge_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$GrimAge_AA$Estimate) - min(spl$GrimAge_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12))
+
+png("Manuscript/NHANES_Figure2.png", width = 12, height = 8, units = "in", res = 300)
+ggarrange(a, b,  common.legend = TRUE, legend = "bottom")
+dev.off()
+
+cell1 <- cell %>% filter(pval < 0.05) %>% arrange(pval)
+no_cell1 <- no_cell %>% filter(pval < 0.05) %>% arrange(pval)
+cell1$Model <- paste("Cell-Adjusted")
+no_cell1$Model <- paste("No Cell-Adjustment")
+sums <- rbind(cell1, no_cell1)
+sums$CI <- paste0("(", format(round(sums$CI_low, digits = 2), nsmall = 2), ", ", format(round(sums$CI_up, digits = 2), nsmall = 2), ")")
+sums <- sums %>% select(Model, Variable.Description, clock, Estimate, CI, pval, p_bon_relax)
+sums <- as.data.frame(sums)
+write.xlsx(sums, file="Manuscript/NHANES_ExWAS_EAA_SupplementalTables.xlsx", append=TRUE, 
+           sheetName="TableS2", row.names=FALSE)
+```
+
+## Primary GrimAge Plots (Cotinine Sensitivity)
+```{r}
+cotinine_no_cell$p_bon_strict <- p.adjust(cotinine_no_cell$pval, method = "bonferroni")
+cotinine_no_cell <- cotinine_no_cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 63)) %>% ungroup()
+cotinine_no_cell$exposuretag <- ifelse(cotinine_no_cell$p_bon_relax < 0.05, cotinine_no_cell$exposure, "")
+cotinine_cell$p_bon_strict <- p.adjust(cotinine_cell$pval, method = "bonferroni")
+cotinine_cell <- cotinine_cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 63)) %>% ungroup()
+cotinine_cell$exposuretag <- ifelse(cotinine_cell$p_bon_relax < 0.05, cotinine_cell$exposure, "")
+
+spl <- split(cotinine_no_cell, cotinine_no_cell$clock)
+a <- spl$GrimAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_x_continuous(limits = c(-1.4, 2.00)) + 
+  scale_y_continuous(limits = c(0, 9)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
+            aes(x = ifelse(exposuretag == "LBXBCD" | exposuretag == "URDUCD", 
+                           Estimate - 0.5, Estimate + 0.1), 
+                y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.1 + (-log10(pval)), 
+                                         0.18 + (-log10(pval))),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12))
+
+
+
+spl <- split(cotinine_cell, cotinine_cell$clock)
+b <- spl$GrimAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_x_continuous(limits = c(-1.4, 2.00)) + 
+  scale_y_continuous(limits = c(0, 9)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
+            aes(x = ifelse(exposuretag == "LBXBCD", 
+                           Estimate - 0.3, Estimate + 0.1), 
+                y = ifelse(exposuretag == "LBX118LA", -0.1 + (-log10(pval)), 
+                                         0.15 + (-log10(pval))),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12))
+
+ggarrange(a, b,  common.legend = TRUE, legend = "bottom")
+
+png("Manuscript/NHANES_Figure3.png", width = 12, height = 8, units = "in", res = 300)
+ggarrange(a, b,  common.legend = TRUE, legend = "bottom")
+dev.off()
+
+cotinine_cell1 <- cotinine_cell %>% filter(pval < 0.05) %>% arrange(pval)
+cotinine_no_cell1 <- cotinine_no_cell %>% filter(pval < 0.05) %>% arrange(pval)
+cotinine_cell1$Model <- paste("Cell-Adjusted")
+cotinine_no_cell1$Model <- paste("No Cell-Adjustment")
+sums <- rbind(cotinine_cell1, cotinine_no_cell1)
+sums$CI <- paste0("(", format(round(sums$CI_low, digits = 2), nsmall = 2), ", ", format(round(sums$CI_up, digits = 2), nsmall = 2), ")")
+sums <- sums %>% select(Model, Variable.Description, clock, Estimate, CI, pval, p_bon_relax)
+sums <- as.data.frame(sums)
+write.xlsx(sums, file="Manuscript/NHANES_ExWAS_EAA_SupplementalTables.xlsx", append=TRUE, 
+           sheetName="TableS3", row.names=FALSE)
+
+```
+
+## Supplemental Plots (Main)
+```{r}
+load("NHANES_Model_Summaries.RData")
+rm(cotinine_cell, cotinine_no_cell, mice_cell, mice_no_cell)
+no_cell$p_bon_strict <- p.adjust(no_cell$pval, method = "bonferroni")
+no_cell <- no_cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 64)) %>% ungroup()
+no_cell$exposuretag <- ifelse(no_cell$p_bon_relax < 0.05, no_cell$exposure, "")
+cell$p_bon_strict <- p.adjust(cell$pval, method = "bonferroni")
+cell <- cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 64)) %>% ungroup()
+cell$exposuretag <- ifelse(cell$p_bon_relax < 0.05, cell$exposure, "")
+
+spl <- split(no_cell, no_cell$clock)
+a <- spl$GrimAge2_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_x_continuous(limits = c(-0.8, 1.5)) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge2: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$GrimAge2_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$GrimAge2_AA$Estimate) - min(spl$GrimAge2_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$GrimAge2_AA$Estimate) - min(spl$GrimAge2_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cell, cell$clock)
+b <- spl$GrimAge2_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_x_continuous(limits = c(-0.8, 1.5)) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge2: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$GrimAge2_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$GrimAge2_AA$Estimate) - min(spl$GrimAge2_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$GrimAge2_AA$Estimate) - min(spl$GrimAge2_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(no_cell, no_cell$clock)
+c <- spl$DunedinPoAm %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DunedinPoAm: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$DunedinPoAm, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            nudge_y = 0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cell, cell$clock)
+d <- spl$DunedinPoAm %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DunedinPoAm: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$DunedinPoAm, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            nudge_y = 0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12))  + 
+  guides(colour = guide_legend(nrow = 2))
+
+spl <- split(no_cell, no_cell$clock)
+e <- spl$Horvath_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Horvath: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$Horvath_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cell, cell$clock)
+f <- spl$Horvath_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Horvath: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$Horvath_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(no_cell, no_cell$clock)
+g <- spl$Hannum_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Hannum: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$Hannum_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cell, cell$clock)
+h <- spl$Hannum_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Hannum: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$Hannum_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(no_cell, no_cell$clock)
+i <- spl$HorvathTelo_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DNAmTL: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$HorvathTelo_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cell, cell$clock)
+j <- spl$HorvathTelo_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DNAmTL: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$HorvathTelo_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(no_cell, no_cell$clock)
+k <- spl$PhenoAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("PhenoAge: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$PhenoAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cell, cell$clock)
+l <- spl$PhenoAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("PhenoAge: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$PhenoAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(no_cell, no_cell$clock)
+m <- spl$SkinBlood_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Skin&Blood: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$SkinBlood_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cell, cell$clock)
+n <- spl$SkinBlood_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Skin&Blood: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$SkinBlood_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+# need to split up into 2 plots
+ggarrange(a,b,c,d,e,f,g,h, nrow = 4, ncol = 2, common.legend = TRUE, legend = "none")
+ggarrange(i,j,k,l,m,n, nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
+
+png("Manuscript/NHANES_FigureS3A.png", width = 10, height = 12, units = "in", res = 300)
+ggarrange(a,b,c,d,e,f,g,h, nrow = 4, ncol = 2, common.legend = TRUE, legend = "none")
+dev.off()
+
+png("Manuscript/NHANES_FigureS3B.png", width = 10, height = 10, units = "in", res = 300)
+ggarrange(i,j,k,l,m,n, nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
+dev.off()
+
+```
+
+## Supplemental Plots (Cotinine Sensitivity)
+```{r}
+load("NHANES_Model_Summaries.RData")
+rm(cell, no_cell, mice_cell, mice_no_cell)
+cotinine_no_cell$p_bon_strict <- p.adjust(cotinine_no_cell$pval, method = "bonferroni")
+cotinine_no_cell <- cotinine_no_cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 63)) %>% ungroup()
+cotinine_no_cell$exposuretag <- ifelse(cotinine_no_cell$p_bon_relax < 0.05, cotinine_no_cell$exposure, "")
+cotinine_cell$p_bon_strict <- p.adjust(cotinine_cell$pval, method = "bonferroni")
+cotinine_cell <- cotinine_cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 63)) %>% ungroup()
+cotinine_cell$exposuretag <- ifelse(cotinine_cell$p_bon_relax < 0.05, cotinine_cell$exposure, "")
+
+spl <- split(cotinine_no_cell, cotinine_no_cell$clock)
+a <- spl$GrimAge2_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge2: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$GrimAge2_AA, exposuretag != ""),
+            aes(x = ifelse(exposuretag == "LBXBCD" | exposuretag == "URDUCD", 
+                           Estimate - 0.7, Estimate + 0.1), 
+                y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.1 + (-log10(pval)), 
+                                         0.2 + (-log10(pval))),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, 
+            show.legend = FALSE)  + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_cell, cotinine_cell$clock)
+b <- spl$GrimAge2_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge2: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
+            aes(x = ifelse(exposuretag == "LBXBCD", Estimate - 0.3, Estimate + 0.1), 
+                y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.1 + (-log10(pval)), 
+                                         0.18 + (-log10(pval))),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_no_cell, cotinine_no_cell$clock)
+c <- spl$DunedinPoAm %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DunedinPoAm: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$DunedinPoAm, exposuretag != ""),
+            aes(x = ifelse(exposuretag == "LBXBCD", Estimate - 0.007, Estimate + 0.001), 
+                y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.001 + (-log10(pval)), 
+                                         0.18 + (-log10(pval))),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_cell, cotinine_cell$clock)
+d <- spl$DunedinPoAm %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DunedinPoAm: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$DunedinPoAm, exposuretag != ""),
+            aes(x = ifelse(exposuretag == "LBXBCD", Estimate - 0.007, Estimate + 0.001), 
+                y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.001 + (-log10(pval)), 
+                                         0.18 + (-log10(pval))),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12))  + 
+  guides(colour = guide_legend(nrow = 2))
+
+spl <- split(cotinine_no_cell, cotinine_no_cell$clock)
+e <- spl$Horvath_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Horvath: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$Horvath_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_cell, cotinine_cell$clock)
+f <- spl$Horvath_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Horvath: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$Horvath_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_no_cell, cotinine_no_cell$clock)
+g <- spl$Hannum_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Hannum: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$Hannum_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_cell, cotinine_cell$clock)
+h <- spl$Hannum_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Hannum: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$Hannum_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_no_cell, cotinine_no_cell$clock)
+i <- spl$HorvathTelo_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DNAmTL: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$HorvathTelo_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_cell, cotinine_cell$clock)
+j <- spl$HorvathTelo_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DNAmTL: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$HorvathTelo_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_no_cell, cotinine_no_cell$clock)
+k <- spl$PhenoAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("PhenoAge: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$PhenoAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_cell, cotinine_cell$clock)
+l <- spl$PhenoAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("PhenoAge: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$PhenoAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_no_cell, cotinine_no_cell$clock)
+m <- spl$SkinBlood_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Skin&Blood: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$SkinBlood_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(cotinine_cell, cotinine_cell$clock)
+n <- spl$SkinBlood_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 7)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Skin&Blood: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$SkinBlood_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+# need to split up into 2 plots
+ggarrange(a,b,c,d,e,f,g,h, nrow = 4, ncol = 2, common.legend = TRUE, legend = "none")
+ggarrange(i,j,k,l,m,n, nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
+
+png("Manuscript/NHANES_FigureS4A.png", width = 10, height = 12, units = "in", res = 300)
+ggarrange(a,b,c,d,e,f,g,h, nrow = 4, ncol = 2, common.legend = TRUE, legend = "none")
+dev.off()
+
+png("Manuscript/NHANES_FigureS4B.png", width = 10, height = 10, units = "in", res = 300)
+ggarrange(i,j,k,l,m,n, nrow = 3, ncol = 2, common.legend = TRUE, legend = "bottom")
+dev.off()
+
+```
+
+## Supplemental Plots (MICE Sensitivity)
+```{r}
+load("NHANES_Model_Summaries.RData")
+rm(cell, no_cell, cotinine_cell, cotinine_no_cell)
+mice_no_cell$p_bon_strict <- p.adjust(mice_no_cell$pval, method = "bonferroni")
+mice_no_cell <- mice_no_cell %>% group_by(clock) %>% mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 64)) %>% ungroup()
+mice_no_cell$exposuretag <- ifelse(mice_no_cell$p_bon_relax < 0.05, mice_no_cell$exposure, "")
+mice_cell$p_bon_strict <- p.adjust(mice_cell$pval, method = "bonferroni")
+mice_cell <- mice_cell %>% group_by(clock) %>% 
+  mutate(p_bon_relax = p.adjust(pval, method = "bonferroni", n = 64)) %>% ungroup()
+mice_cell$exposuretag <- ifelse(mice_cell$p_bon_relax < 0.05, mice_cell$exposure, "")
+
+cell1 <- mice_cell %>% filter(pval < 0.05) %>% arrange(pval)
+no_cell1 <- mice_no_cell %>% filter(pval < 0.05) %>% arrange(pval)
+cell1$Model <- paste("Cell-Adjusted")
+no_cell1$Model <- paste("No Cell-Adjustment")
+sums <- rbind(cell1, no_cell1)
+sums$CI <- paste0("(", format(round(sums$CI_low, digits = 2), nsmall = 2), ", ", format(round(sums$CI_up, digits = 2), nsmall = 2), ")")
+sums <- sums %>% select(Model, Variable.Description, clock, Estimate, CI, pval, p_bon_relax)
+sums <- as.data.frame(sums)
+write.xlsx(sums, file="Manuscript/NHANES_ExWAS_EAA_SupplementalTables.xlsx", append=TRUE, 
+           sheetName="TableS4", row.names=FALSE)
+
+
+spl <- split(mice_no_cell, mice_no_cell$clock)
+a1 <- spl$GrimAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_color_lancet() + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1, 
+            nudge_y = -0.1, 
+            show.legend = FALSE)  + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+
+spl <- split(mice_cell, mice_cell$clock)
+b1 <- spl$GrimAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_color_lancet() + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1, 
+            nudge_y = -0.1, 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_no_cell, mice_no_cell$clock)
+a <- spl$GrimAge2_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge2: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$GrimAge2_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$GrimAge2_AA$Estimate) - min(spl$GrimAge2_AA$Estimate)), 
+            nudge_y = -0.1, 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_cell, mice_cell$clock)
+b <- spl$GrimAge2_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("GrimAge2: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$GrimAge2_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$GrimAge2_AA$Estimate) - min(spl$GrimAge2_AA$Estimate)), 
+            nudge_y = -0.1, 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_no_cell, mice_no_cell$clock)
+c <- spl$DunedinPoAm %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DunedinPoAm: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$DunedinPoAm, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            nudge_y = 0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_cell, mice_cell$clock)
+d <- spl$DunedinPoAm %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DunedinPoAm: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$DunedinPoAm, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            nudge_y = 0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12))  + 
+  guides(colour = guide_legend(nrow = 2))
+
+spl <- split(mice_no_cell, mice_no_cell$clock)
+e <- spl$Horvath_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Horvath: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$Horvath_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_cell, mice_cell$clock)
+f <- spl$Horvath_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Horvath: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$Horvath_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Horvath_AA$Estimate) - min(spl$Horvath_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_no_cell, mice_no_cell$clock)
+g <- spl$Hannum_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Hannum: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$Hannum_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_cell, mice_cell$clock)
+h <- spl$Hannum_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Hannum: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$Hannum_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$Hannum_AA$Estimate) - min(spl$Hannum_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_no_cell, mice_no_cell$clock)
+i <- spl$HorvathTelo_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DNAmTL: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$HorvathTelo_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_cell, mice_cell$clock)
+j <- spl$HorvathTelo_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("DNAmTL: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$HorvathTelo_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$HorvathTelo_AA$Estimate) - min(spl$HorvathTelo_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_no_cell, mice_no_cell$clock)
+k <- spl$PhenoAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("PhenoAge: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$PhenoAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_cell, mice_cell$clock)
+l <- spl$PhenoAge_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("PhenoAge: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$PhenoAge_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$PhenoAge_AA$Estimate) - min(spl$PhenoAge_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_no_cell, mice_no_cell$clock)
+m <- spl$SkinBlood_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Skin&Blood: No Cell-Adjustment") + 
+  geom_text(data=subset(spl$SkinBlood_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+spl <- split(mice_cell, mice_cell$clock)
+n <- spl$SkinBlood_AA %>% 
+  filter(!is.infinite(CI_low) & !is.na(CI_low)) %>% 
+  ggplot() + 
+  geom_point(aes(x = Estimate, y = -log10(pval), 
+                      color = Dataset), size = 3) + 
+  theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
+  ylab(bquote(bold(-log[10](p~value)))) + 
+  theme(legend.position = "bottom", legend.title = element_blank()) + 
+  scale_y_continuous(limits = c(0, 5)) + 
+  scale_color_lancet() + 
+  geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  ggtitle("Skin&Blood: Cell-Adjusted Models") + 
+  geom_text(data=subset(spl$SkinBlood_AA, exposuretag != ""),
+            aes(x = Estimate, y = -log10(pval),  
+                label=Variable.Description, color = Dataset), 
+            hjust = 0, nudge_x = -0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            nudge_y = 0.1*(max(spl$SkinBlood_AA$Estimate) - min(spl$SkinBlood_AA$Estimate)), 
+            show.legend = FALSE) + 
+  theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
+        axis.text = element_text(face="bold", size = 12), 
+        axis.title = element_text(face="bold", size = 12), 
+        legend.text = element_text(face="bold", size = 12)) + 
+  guides(colour = guide_legend(nrow = 2))
+
+
+png("Manuscript/NHANES_FigureS5A.png", width = 10, height = 12, units = "in", res = 300)
+ggarrange(a1,b1,a,b,c,d,e,f, nrow = 4, ncol = 2, common.legend = TRUE, legend = "none")
+dev.off()
+
+png("Manuscript/NHANES_FigureS5B.png", width = 10, height = 12, units = "in", res = 300)
+ggarrange(g,h,i,j,k,l,m,n, nrow = 4, ncol = 2, common.legend = TRUE, legend = "bottom")
+dev.off()
+
+```
+
+
