@@ -122,7 +122,7 @@ pest <- rbind(pest, c("URXDIZ", "URDDIZLC",
 Metals
 ```{r}
 varlist <- c("URXUBA","URXUBE","URXUCO","URXUCS","URXUMO","URXUPB",
-             "URXUPT","URXUSB","URXUTL","URXUTU", "URDUCD")
+             "URXUPT","URXUSB","URXUTL","URXUTU")
 commentlist <- paste0("URD", substr(varlist, 4, 6), "LC")
 
 check <- read.csv("comments_clean.csv") 
@@ -148,6 +148,9 @@ for(i in 1:length(commentlist)){
 }
 
 metals <- sum_df
+metals <- rbind(metals, 
+                c("URDUCD", "URDUCDLC", table(df$URDUCDLC)[1], 
+                  table(df$URDUCDLC)[2] + table(df$URDUCDLC)[3]))
 
 ```
 
