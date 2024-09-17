@@ -1,0 +1,627 @@
+---
+title: "01_NHANES_Analysis_Updated"
+author: "Dennis Khodasevich"
+date: "8/25/2024"
+output: html_document
+---
+
+# Load Data
+```{r}
+library(haven)
+library(tidyverse)
+library(Metrics)
+library(gridExtra)
+library(survey)
+library(forcats)
+library(ggsci)
+library(stringi)
+set.seed(999)
+load("NHANES_Exposures_Clean.RData")
+
+# clean up dictionary names
+dict <- dict %>% 
+  mutate(Dataset = ifelse(Dataset == "Volatile Organic Compounds - Blood & Water (LAB04)", 
+                          "Volatile Organic Compounds", 
+                    ifelse(Dataset == "Phthalates, Phytoestrogens & PAHs - Urine (PHPYPA)", 
+                           "Phthalates, Phytoestrogens & PAHs", 
+                    ifelse(Dataset == "Pesticides - Current Use - Urine (LAB26PP)", "Pesticides", 
+                    ifelse(Dataset == "Metals - Urine (LAB06HM)", "Metals", 
+                    ifelse(Dataset == "Dioxins, Furans, & Coplanar PCBs (LAB28POC)", 
+                           "Dioxins, Furans & Coplanar PCBs", 
+                    ifelse(Dataset == "Cadmium, Lead, Mercury, Cotinine & Nutritional Biochemistries (LAB06)",
+                           "Cadmium, Lead & Cotinine", Dataset)))))))
+dict <- dict %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "Lipid Adjusted", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ng/mL)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ug/L)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ng/L)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ng/g)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(fg/g)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ug/dL)", ""))
+
+# ensure proper coding of covariates
+df$RIAGENDR <- as.factor(df$RIAGENDR)      # sex
+df$RIDRETH1 <- as.factor(df$RIDRETH1)      # race/ethnicity cat
+df$EDUCATION <- as.factor(df$EDUCATION)    # Education cat
+df$OCCUPATION <- as.factor(df$OCCUPATION)  # occupation cat
+df$SMOKE_3cat <- as.factor(df$SMOKE_3cat)  # self-reported smoking
+df$INDFMPIR <- as.numeric(df$INDFMPIR)     # poverty income ratio
+
+# explicitly set reference groups for factors
+df$RIAGENDR <- relevel(df$RIAGENDR, ref = "Male")
+df$RIDRETH1 <- relevel(df$RIDRETH1, ref = "Non-Hispanic White")
+df$EDUCATION <- relevel(df$EDUCATION, ref = "Less Than High School")
+df$OCCUPATION <- relevel(df$OCCUPATION, ref = "lowblue")
+df$SMOKE_3cat <- relevel(df$SMOKE_3cat, ref = "Never")
+
+# list of clocks
+clocklist <- c("Horvath_AA", "Hannum_AA", "SkinBlood_AA", "PhenoAge_AA", 
+            "GrimAge_AA", "GrimAge2_AA", "HorvathTelo_AA", "DunedinPoAm")
+
+# list of exposures
+### filter exposures based on 50% above LOD threshold
+lod <- read.csv("NHANES_LODs.csv")
+lod <- lod %>% filter(keep == "Keep" & pfas_flag == "") 
+varlist <- lod$Exposure
+### final list of exposures
+phthal <- lod %>% filter(creatinine == "URXUCR.x") %>% select(Exposure) %>% unlist()
+pest <- lod %>% filter(creatinine == "URXUCR.y") %>% select(Exposure) %>% unlist()
+metals <- lod %>% filter(creatinine == "URXUCR") %>% select(Exposure) %>% unlist()
+rest <- lod %>% filter(creatinine == "") %>% select(Exposure) %>% unlist()
+
+# specify survey design
+nhanesDesign <- svydesign(id = ~SDMVPSU,  # Primary Sampling Units (PSU)
+                          strata  = ~SDMVSTRA, # Stratification used in the survey
+                          weights = ~WTDN4YR,   # Survey weights (using those from DNAm dataset)
+                          nest    = TRUE,      # Whether PSUs are nested within strata
+                          data    = df)
+
+```
+
+
+# Primary Models (Complete Case)
+
+## No Cell-Adjustment
+```{r}
+counter = 0
+for(i in 1:length(varlist)){
+  
+  cur_exposure <- varlist[i]
+  
+  # create new variable name for easier model specs
+  nhanesDesign[["variables"]]$cur_measure <- unlist(nhanesDesign[["variables"]][varlist[i]]) 
+  nhanesDesign[["variables"]]$cur_measure <- as.numeric(nhanesDesign[["variables"]]$cur_measure)
+  nhanesDesign[["variables"]]$cur_measure_scale <- log2(nhanesDesign[["variables"]]$cur_measure)
+  nhanesDesign[["variables"]]$cur_measure_scale <- as.vector(scale(nhanesDesign[["variables"]]$cur_measure_scale, 
+                                                   center = TRUE, scale = TRUE))
+  
+  for(j in 1:length(clocklist)){
+      
+      clock <- clocklist[j]
+        
+      # create new variable name for easier model specs
+      nhanesDesign[["variables"]]$cur_clock<-unlist(nhanesDesign[["variables"]][clocklist[j]]) 
+
+      if(cur_exposure %in% rest){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat, 
+                         design = nhanesDesign, family = gaussian())
+      } else if(cur_exposure %in% phthal){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR.x, 
+                         design = nhanesDesign, family = gaussian())
+      } else if(cur_exposure %in% pest){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR.y, 
+                         design = nhanesDesign, family = gaussian())
+      } else if (cur_exposure %in% metals){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR, 
+                         design = nhanesDesign, family = gaussian())
+      } else(stop("Errors: Model Being Run on Unexpected Variable"))
+
+      model_sums <- as.data.frame(t(as.data.frame(summary(weighted_model)$coefficients[2, ])))
+      colnames(model_sums) <- c("Estimate", "SE", "tval", "pval")
+      
+      model_sums$CI_low <- confint(weighted_model, 2)[1]
+      model_sums$CI_up <- confint(weighted_model, 2)[2]
+      
+      model_sums$exposure <- cur_exposure
+      model_sums$clock <- clock
+      model_sums$N <- nrow(weighted_model$model)
+    
+      counter = counter + 1
+      if(counter == 1){
+        fullsum <- model_sums
+      } else{
+        fullsum <- rbind(fullsum, model_sums)
+      }
+  }
+}
+
+rownames(fullsum) <- seq(1, nrow(fullsum))
+fullsum <- left_join(fullsum, dict, by = "exposure")
+no_cell <- fullsum
+
+```
+
+## Cell-Adjusted Models
+```{r}
+
+counter = 0
+for(i in 1:length(varlist)){
+  
+  cur_exposure <- varlist[i]
+  
+  # create new variable name for easier model specs
+  nhanesDesign[["variables"]]$cur_measure <- unlist(nhanesDesign[["variables"]][varlist[i]]) 
+  nhanesDesign[["variables"]]$cur_measure <- as.numeric(nhanesDesign[["variables"]]$cur_measure)
+  nhanesDesign[["variables"]]$cur_measure_scale <- log2(nhanesDesign[["variables"]]$cur_measure)
+  nhanesDesign[["variables"]]$cur_measure_scale <- as.vector(scale(nhanesDesign[["variables"]]$cur_measure_scale, 
+                                                   center = TRUE, scale = TRUE))
+  
+  for(j in 1:length(clocklist)){
+      
+      clock <- clocklist[j]
+        
+      # create new variable name for easier model specs
+      nhanesDesign[["variables"]]$cur_clock<-unlist(nhanesDesign[["variables"]][clocklist[j]]) 
+
+      if(cur_exposure %in% rest){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian())
+      } else if(cur_exposure %in% phthal){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR.x + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian())
+      } else if(cur_exposure %in% pest){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR.y + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian())
+      } else if (cur_exposure %in% metals){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian())
+      } else(stop("Errors: Model Being Run on Unexpected Variable"))
+
+      model_sums <- as.data.frame(t(as.data.frame(summary(weighted_model)$coefficients[2, ])))
+      colnames(model_sums) <- c("Estimate", "SE", "tval", "pval")
+      
+      model_sums$CI_low <- confint(weighted_model, 2)[1]
+      model_sums$CI_up <- confint(weighted_model, 2)[2]
+      
+      model_sums$exposure <- cur_exposure
+      model_sums$clock <- clock
+      model_sums$N <- nrow(weighted_model$model)
+    
+      counter = counter + 1
+      if(counter == 1){
+        fullsum <- model_sums
+      } else{
+        fullsum <- rbind(fullsum, model_sums)
+      }
+  }
+}
+
+rownames(fullsum) <- seq(1, nrow(fullsum))
+fullsum <- left_join(fullsum, dict, by = "exposure")
+cell <- fullsum
+```
+
+
+
+# Sensitivity Models (Cotinine Instead of Self-Reported Smoking)
+
+## No Cell-Adjustment
+```{r}
+# remove cotinine from exposures
+rest <- setdiff(rest, "LBXCOT")
+varlist <- setdiff(varlist, "LBXCOT")
+
+counter = 0
+for(i in 1:length(varlist)){
+  
+  cur_exposure <- varlist[i]
+  
+  # create new variable name for easier model specs
+  nhanesDesign[["variables"]]$cur_measure <- unlist(nhanesDesign[["variables"]][varlist[i]]) 
+  nhanesDesign[["variables"]]$cur_measure <- as.numeric(nhanesDesign[["variables"]]$cur_measure)
+  nhanesDesign[["variables"]]$cur_measure_scale <- log2(nhanesDesign[["variables"]]$cur_measure)
+  nhanesDesign[["variables"]]$cur_measure_scale <- as.vector(scale(nhanesDesign[["variables"]]$cur_measure_scale, 
+                                                   center = TRUE, scale = TRUE))
+  
+  for(j in 1:length(clocklist)){
+      
+      clock <- clocklist[j]
+        
+      # create new variable name for easier model specs
+      nhanesDesign[["variables"]]$cur_clock<-unlist(nhanesDesign[["variables"]][clocklist[j]]) 
+
+      if(cur_exposure %in% rest){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT, 
+                         design = nhanesDesign, family = gaussian())
+      } else if(cur_exposure %in% phthal){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT + 
+                             URXUCR.x, 
+                         design = nhanesDesign, family = gaussian())
+      } else if(cur_exposure %in% pest){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT + 
+                             URXUCR.y, 
+                         design = nhanesDesign, family = gaussian())
+      } else if (cur_exposure %in% metals){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT + 
+                             URXUCR, 
+                         design = nhanesDesign, family = gaussian())
+      } else(stop("Errors: Model Being Run on Unexpected Variable"))
+
+      model_sums <- as.data.frame(t(as.data.frame(summary(weighted_model)$coefficients[2, ])))
+      colnames(model_sums) <- c("Estimate", "SE", "tval", "pval")
+      
+      model_sums$CI_low <- confint(weighted_model, 2)[1]
+      model_sums$CI_up <- confint(weighted_model, 2)[2]
+      
+      model_sums$exposure <- cur_exposure
+      model_sums$clock <- clock
+      model_sums$N <- nrow(weighted_model$model)
+    
+      counter = counter + 1
+      if(counter == 1){
+        fullsum <- model_sums
+      } else{
+        fullsum <- rbind(fullsum, model_sums)
+      }
+  }
+}
+
+rownames(fullsum) <- seq(1, nrow(fullsum))
+fullsum <- left_join(fullsum, dict, by = "exposure")
+cotinine_no_cell <- fullsum
+
+```
+
+## Cell-Adjusted Models
+```{r}
+# remove cotinine from exposures
+rest <- setdiff(rest, "LBXCOT")
+varlist <- setdiff(varlist, "LBXCOT")
+
+counter = 0
+for(i in 1:length(varlist)){
+  
+  cur_exposure <- varlist[i]
+  
+  # create new variable name for easier model specs
+  nhanesDesign[["variables"]]$cur_measure <- unlist(nhanesDesign[["variables"]][varlist[i]]) 
+  nhanesDesign[["variables"]]$cur_measure <- as.numeric(nhanesDesign[["variables"]]$cur_measure)
+  nhanesDesign[["variables"]]$cur_measure_scale <- log2(nhanesDesign[["variables"]]$cur_measure)
+  nhanesDesign[["variables"]]$cur_measure_scale <- as.vector(scale(nhanesDesign[["variables"]]$cur_measure_scale, 
+                                                   center = TRUE, scale = TRUE))
+  
+  for(j in 1:length(clocklist)){
+      
+      clock <- clocklist[j]
+        
+      # create new variable name for easier model specs
+      nhanesDesign[["variables"]]$cur_clock<-unlist(nhanesDesign[["variables"]][clocklist[j]]) 
+
+      if(cur_exposure %in% rest){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian())
+      } else if(cur_exposure %in% phthal){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT + 
+                             URXUCR.x + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian())
+      } else if(cur_exposure %in% pest){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT + 
+                             URXUCR.y + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian())
+      } else if (cur_exposure %in% metals){ 
+      weighted_model <- svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT + 
+                             URXUCR + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian())
+      } else(stop("Errors: Model Being Run on Unexpected Variable"))
+
+      model_sums <- as.data.frame(t(as.data.frame(summary(weighted_model)$coefficients[2, ])))
+      colnames(model_sums) <- c("Estimate", "SE", "tval", "pval")
+      
+      model_sums$CI_low <- confint(weighted_model, 2)[1]
+      model_sums$CI_up <- confint(weighted_model, 2)[2]
+      
+      model_sums$exposure <- cur_exposure
+      model_sums$clock <- clock
+      model_sums$N <- nrow(weighted_model$model)
+    
+      counter = counter + 1
+      if(counter == 1){
+        fullsum <- model_sums
+      } else{
+        fullsum <- rbind(fullsum, model_sums)
+      }
+  }
+}
+
+rownames(fullsum) <- seq(1, nrow(fullsum))
+fullsum <- left_join(fullsum, dict, by = "exposure")
+cotinine_cell <- fullsum
+```
+
+
+
+# Sensitivity Models (Imputation of Missing Covariates)
+```{r}
+library(haven)
+library(tidyverse)
+library(Metrics)
+library(gridExtra)
+library(survey)
+library(forcats)
+library(ggsci)
+library(mice)
+library(mitools)
+set.seed(999)
+load("NHANES_Exposures_Clean.RData")
+
+############### recode characters as numeric factors
+df$RIAGENDR <- ifelse(df$RIAGENDR == "Male", 0, ifelse(df$RIAGENDR == "Female", 1, NA))
+df$RIDRETH1 <- ifelse(df$RIDRETH1 == "Non-Hispanic White", 0, ifelse(df$RIDRETH1 == "Mexican American", 1, 
+                                  ifelse(df$RIDRETH1 == "Other Hispanic", 2, 
+                                  ifelse(df$RIDRETH1 == "Non-Hispanic Black", 3, 
+                                  ifelse(df$RIDRETH1 == "Other Race - Including Multi-Racial", 4, NA)))))
+df$SMOKE_3cat <- ifelse(df$SMOKE_3cat == "Never", 0, 
+                        ifelse(df$SMOKE_3cat == "Former", 1, 
+                        ifelse(df$SMOKE_3cat == "Current", 2, NA)))
+df$EDUCATION <- ifelse(df$EDUCATION == "Less Than High School", 0, 
+                        ifelse(df$EDUCATION == "High School Diploma (including GED)", 1, 
+                        ifelse(df$EDUCATION == "More Than High School", 2, NA)))
+df$OCCUPATION <- ifelse(df$OCCUPATION == "lowblue", 0, ifelse(df$OCCUPATION == "hiblue", 1, 
+                ifelse(df$OCCUPATION == "lowwhite", 2, ifelse(df$OCCUPATION == "hiwhite", 3, 
+                                                       ifelse(df$OCCUPATION == "nowork", 4, NA)))))
+
+# clean up dictionary names
+dict <- dict %>% 
+  mutate(Dataset = ifelse(Dataset == "Volatile Organic Compounds - Blood & Water (LAB04)", 
+                          "Volatile Organic Compounds", 
+                    ifelse(Dataset == "Phthalates, Phytoestrogens & PAHs - Urine (PHPYPA)", 
+                           "Phthalates, Phytoestrogens & PAHs", 
+                    ifelse(Dataset == "Pesticides - Current Use - Urine (LAB26PP)", "Pesticides", 
+                    ifelse(Dataset == "Metals - Urine (LAB06HM)", "Metals", 
+                    ifelse(Dataset == "Dioxins, Furans, & Coplanar PCBs (LAB28POC)", 
+                           "Dioxins, Furans & Coplanar PCBs", 
+                    ifelse(Dataset == "Cadmium, Lead, Mercury, Cotinine & Nutritional Biochemistries (LAB06)",
+                           "Cadmium, Lead & Cotinine", Dataset)))))))
+dict <- dict %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "Lipid Adjusted", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ng/mL)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ug/L)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ng/L)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ng/g)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(fg/g)", "")) %>% 
+  mutate(Variable.Description = stri_replace_all_fixed(Variable.Description, "(ug/dL)", ""))
+
+df$RIAGENDR <- as.factor(df$RIAGENDR)
+df$RIDRETH1 <- as.factor(df$RIDRETH1)
+df$EDUCATION <- as.factor(df$EDUCATION)
+df$OCCUPATION <- as.factor(df$OCCUPATION)
+df$SMOKE_3cat <- as.factor(df$SMOKE_3cat)
+df$INDFMPIR <- as.numeric(df$INDFMPIR)    
+
+subs <- df %>% select(RIDAGEYR, RIAGENDR, RIDRETH1, BMXBMI, EDUCATION, OCCUPATION, INDFMPIR, SMOKE_3cat)
+non_subs <- df %>% 
+  select(-RIDAGEYR, -RIAGENDR, -RIDRETH1, -BMXBMI, -EDUCATION, -OCCUPATION, -INDFMPIR, -SMOKE_3cat)
+df_imp <- mice(subs, m = 5)              # imputation with 5 iterations
+df_imp <- mice::cbind(df_imp, non_subs)  # add exposure data
+l <- list((complete(df_imp, action = 1)), (complete(df_imp, action = 2)), (complete(df_imp, action = 3)), 
+          (complete(df_imp, action = 4)), (complete(df_imp, action = 5)))
+df_imp_list <- imputationList(l) # create imputation list compatible with survey design
+
+# list of clocks
+clocklist <- c("Horvath_AA", "Hannum_AA", "SkinBlood_AA", "PhenoAge_AA", 
+            "GrimAge_AA", "GrimAge2_AA", "HorvathTelo_AA", "DunedinPoAm")
+
+# list of exposures
+### filter exposures based on 50% above LOD threshold
+lod <- read.csv("NHANES_LODs.csv")
+lod <- lod %>% filter(keep == "Keep" & pfas_flag == "")
+varlist <- lod$Exposure
+### final list of exposures
+phthal <- lod %>% filter(creatinine == "URXUCR.x") %>% select(Exposure) %>% unlist()
+pest <- lod %>% filter(creatinine == "URXUCR.y") %>% select(Exposure) %>% unlist()
+metals <- lod %>% filter(creatinine == "URXUCR") %>% select(Exposure) %>% unlist()
+rest <- lod %>% filter(creatinine == "") %>% select(Exposure) %>% unlist()
+
+# specify survey design
+nhanesDesign <- svydesign(id = ~SDMVPSU,  # Primary Sampling Units (PSU)
+                          strata  = ~SDMVSTRA, # Stratification used in the survey
+                          weights = ~WTDN4YR,   # Survey weights (using those from DNAm dataset)
+                          nest    = TRUE,      # Whether PSUs are nested within strata
+                          data    = df_imp_list)
+
+```
+
+## No Cell-Adjustment
+```{r}
+counter = 0
+for(i in 1:length(varlist)){
+  
+  cur_exposure <- varlist[i]
+
+  # creating generic named variable in each imputation
+  for(m in 1:5){
+    nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure <-
+      unlist(nhanesDesign[["designs"]][[m]][["variables"]][varlist[i]])
+  }
+
+  # update this if not using numeric exposure variables
+  for(m in 1:5){
+    nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure <-
+      as.numeric(nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure) 
+  }
+
+  for(m in 1:5){
+    nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure_scale <-
+      as.vector(scale(log2(nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure), center = TRUE, scale = TRUE))
+  }
+
+  for(j in 1:length(clocklist)){
+      
+      clock <- clocklist[j]
+        
+      # create new variable name for easier model specs
+      for(m in 1:5){
+        nhanesDesign[["designs"]][[m]][["variables"]]$cur_clock <- 
+          unlist(nhanesDesign[["designs"]][[m]][["variables"]][clocklist[j]])
+       }
+
+      if(cur_exposure %in% rest){ 
+      weighted_model <- with(nhanesDesign, svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat, 
+                         design = nhanesDesign, family = gaussian()))
+      } else if(cur_exposure %in% phthal){ 
+      weighted_model <- with(nhanesDesign, svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR.x, 
+                         design = nhanesDesign, family = gaussian()))
+      } else if(cur_exposure %in% pest){ 
+      weighted_model <- with(nhanesDesign, svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR.y, 
+                         design = nhanesDesign, family = gaussian()))
+      } else if (cur_exposure %in% metals){ 
+      weighted_model <- with(nhanesDesign, svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR, 
+                         design = nhanesDesign, family = gaussian()))
+      } else(stop("Errors: Model Being Run on Unexpected Variable"))
+
+      model_sums <- summary(pool(weighted_model), conf.int = TRUE)[2, c(2,3,4,6,7,8)]
+      colnames(model_sums) <- c("Estimate", "SE", "tval", "pval", "CI_low", "CI_up")
+      
+      model_sums$exposure <- cur_exposure
+      model_sums$clock <- clock
+      model_sums$N <- length(weighted_model[[1]][["residuals"]])
+    
+      counter = counter + 1
+      if(counter == 1){
+        fullsum <- model_sums
+      } else{
+        fullsum <- rbind(fullsum, model_sums)
+      }
+  }
+}
+
+rownames(fullsum) <- seq(1, nrow(fullsum))
+fullsum <- left_join(fullsum, dict, by = "exposure")
+mice_no_cell <- fullsum
+```
+
+## Cell-Adjusted Models
+```{r}
+counter = 0
+for(i in 1:length(varlist)){
+  
+  cur_exposure <- varlist[i]
+
+  # creating generic named variable in each imputation
+  for(m in 1:5){
+    nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure <-
+      unlist(nhanesDesign[["designs"]][[m]][["variables"]][varlist[i]])
+  }
+
+  # update this if not using numeric exposure variables
+  for(m in 1:5){
+    nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure <-
+      as.numeric(nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure) 
+  }
+
+  for(m in 1:5){
+    nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure_scale <-
+      as.vector(scale(log2(nhanesDesign[["designs"]][[m]][["variables"]]$cur_measure), center = TRUE, scale = TRUE))
+  }
+
+  for(j in 1:length(clocklist)){
+      
+      clock <- clocklist[j]
+        
+      # create new variable name for easier model specs
+      for(m in 1:5){
+        nhanesDesign[["designs"]][[m]][["variables"]]$cur_clock <- 
+          unlist(nhanesDesign[["designs"]][[m]][["variables"]][clocklist[j]])
+       }
+
+      if(cur_exposure %in% rest){ 
+      weighted_model <- with(nhanesDesign, svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian()))
+      } else if(cur_exposure %in% phthal){ 
+      weighted_model <- with(nhanesDesign, svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR.x + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian()))
+      } else if(cur_exposure %in% pest){ 
+      weighted_model <- with(nhanesDesign, svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR.y + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian()))
+      } else if (cur_exposure %in% metals){ 
+      weighted_model <- with(nhanesDesign, svyglm(cur_clock ~ cur_measure_scale + 
+                           RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR + SMOKE_3cat + 
+                             URXUCR + 
+                             CD8TPP + CD4TPP + Nkcell + Bcell + MonoPP + NeuPP, 
+                         design = nhanesDesign, family = gaussian()))
+      } else(stop("Errors: Model Being Run on Unexpected Variable"))
+
+      model_sums <- summary(pool(weighted_model), conf.int = TRUE)[2, c(2,3,4,6,7,8)]
+      colnames(model_sums) <- c("Estimate", "SE", "tval", "pval", "CI_low", "CI_up")
+      
+      model_sums$exposure <- cur_exposure
+      model_sums$clock <- clock
+      model_sums$N <- length(weighted_model[[1]][["residuals"]])
+    
+      counter = counter + 1
+      if(counter == 1){
+        fullsum <- model_sums
+      } else{
+        fullsum <- rbind(fullsum, model_sums)
+      }
+  }
+}
+
+rownames(fullsum) <- seq(1, nrow(fullsum))
+fullsum <- left_join(fullsum, dict, by = "exposure")
+mice_cell <- fullsum
+```
+
+# Save Results
+```{r}
+save(no_cell, cell,                     # primary models
+     cotinine_no_cell, cotinine_cell,   # cotinine sensitivity
+     mice_no_cell, mice_cell,           # imputation sensitivity
+     file = "NHANES_Model_Summaries.RData")
+```
+
