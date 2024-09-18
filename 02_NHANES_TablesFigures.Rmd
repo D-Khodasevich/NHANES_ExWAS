@@ -7,7 +7,10 @@ date: '2024-08-15'
 # Table 1
 Demographics for sample with clock data and complete covariate data.  
 ```{r}
+library(tidyverse)
 library(tableone)
+library(Metrics)
+library(gridExtra)
 
 load("NHANES_Exposures_Clean.RData")
 myVars <- c("RIDAGEYR", "BMXBMI", "RIAGENDR", "RIDRETH1", "INDFMPIR", 
@@ -94,9 +97,7 @@ g <- ggplot(df, aes(x = RIDAGEYR, y = HorvathTelo)) +
   geom_point(alpha = 0.5, color = "darkblue") + 
   theme_bw() + xlab("Age (Years)") + 
   ylab("DNAmTL") + 
-  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$HorvathTelo), digits = 2), nsmall = 2), 
-                 ", ", 
-          "MAE = ", format(round(mdae(df$RIDAGEYR, df$HorvathTelo), digits = 2), nsmall = 2))) + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$HorvathTelo), digits = 2), nsmall = 2))) + 
   theme(plot.title = element_text(hjust = 0.5), 
         axis.title = element_text(size = 14, face = "bold")) 
 
@@ -104,9 +105,7 @@ h <- ggplot(df, aes(x = RIDAGEYR, y = DunedinPoAm)) +
   geom_point(alpha = 0.5, color = "darkblue") + 
   theme_bw() + xlab("Age (Years)") + 
   ylab("DunedinPoAm") + 
-  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$DunedinPoAm), digits = 2), nsmall = 2), 
-                 ", ", 
-          "MAE = ", format(round(mdae(df$RIDAGEYR, df$DunedinPoAm), digits = 2), nsmall = 2))) + 
+  ggtitle(paste0("Corr = ", format(round(cor(df$RIDAGEYR, df$DunedinPoAm), digits = 2), nsmall = 2))) + 
   theme(plot.title = element_text(hjust = 0.5), 
         axis.title = element_text(size = 14, face = "bold")) 
 
