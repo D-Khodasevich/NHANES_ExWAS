@@ -122,7 +122,8 @@ clocks <- c("Horvath_AA", "Hannum_AA", "SkinBlood_AA", "PhenoAge_AA",
             "GrimAge_AA", "GrimAge2_AA", "HorvathTelo_AA", "DunedinPoAm")
 
 plot_sub <- df %>% 
-  select(all_of(clocks))
+  select(all_of(clocks)) %>% 
+  rename(DNAmTL_AA = HorvathTelo_AA) # renaming DNAmTL to the more common name
 
 corr <- round(cor(plot_sub), 2)
 
