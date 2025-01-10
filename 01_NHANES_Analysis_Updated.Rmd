@@ -76,6 +76,9 @@ nhanesDesign <- svydesign(id = ~SDMVPSU,  # Primary Sampling Units (PSU)
                           nest    = TRUE,      # Whether PSUs are nested within strata
                           data    = df)
 
+# subset to true reported age and sex-mismatch removed sample
+nhanesDesign <- subset(nhanesDesign, !is.na(RIDAGEYR) & sexFlag == 0)
+
 ```
 
 
@@ -369,6 +372,38 @@ cotinine_cell <- fullsum
 ```
 
 
+## Revision Models
+Cadmium exposure, stratified by smoking status
+```{r}
+
+nhanesDesign[["variables"]]$cur_measure <- unlist(nhanesDesign[["variables"]]["LBXBCD"]) 
+nhanesDesign[["variables"]]$cur_measure <- as.numeric(nhanesDesign[["variables"]]$cur_measure)
+nhanesDesign[["variables"]]$cur_measure_scale <- log2(nhanesDesign[["variables"]]$cur_measure)
+nhanesDesign[["variables"]]$cur_measure_scale <- as.vector(scale(nhanesDesign[["variables"]]$cur_measure_scale, 
+                                                   center = TRUE, scale = TRUE))
+
+weighted_model <- svyglm(GrimAge_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Never"), family = gaussian())
+summary(weighted_model)
+confint(weighted_model, 2)
+
+weighted_model <- svyglm(GrimAge_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Former"), family = gaussian())
+summary(weighted_model)
+confint(weighted_model, 2)
+
+weighted_model <- svyglm(GrimAge_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Current"), family = gaussian())
+summary(weighted_model)
+confint(weighted_model, 2)
+
+
+```
+
+
 
 # Sensitivity Models (Imputation of Missing Covariates)
 ```{r}
@@ -428,6 +463,8 @@ df$OCCUPATION <- as.factor(df$OCCUPATION)
 df$SMOKE_3cat <- as.factor(df$SMOKE_3cat)
 df$INDFMPIR <- as.numeric(df$INDFMPIR)    
 
+df$ageFlag = ifelse(is.na(df$RIDAGEYR), 1, 0)
+
 subs <- df %>% select(RIDAGEYR, RIAGENDR, RIDRETH1, BMXBMI, EDUCATION, OCCUPATION, INDFMPIR, SMOKE_3cat)
 non_subs <- df %>% 
   select(-RIDAGEYR, -RIAGENDR, -RIDRETH1, -BMXBMI, -EDUCATION, -OCCUPATION, -INDFMPIR, -SMOKE_3cat)
@@ -458,6 +495,9 @@ nhanesDesign <- svydesign(id = ~SDMVPSU,  # Primary Sampling Units (PSU)
                           weights = ~WTDN4YR,   # Survey weights (using those from DNAm dataset)
                           nest    = TRUE,      # Whether PSUs are nested within strata
                           data    = df_imp_list)
+
+# subset to true reported age and sex-mismatch removed sample
+nhanesDesign <- subset(nhanesDesign, ageFlag == 0 & sexFlag == 0)
 
 ```
 

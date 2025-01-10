@@ -13,6 +13,7 @@ library(Metrics)
 library(gridExtra)
 
 load("NHANES_Exposures_Clean.RData")
+df <- df %>% filter(!is.na(RIDAGEYR) & sexFlag == 0) 
 myVars <- c("RIDAGEYR", "BMXBMI", "RIAGENDR", "RIDRETH1", "INDFMPIR", 
             "EDUCATION", "OCCUPATION", "SMOKE_3cat") 
 catVars <- c("RIAGENDR", "RIDRETH1", "SMOKE_3cat", "EDUCATION", "OCCUPATION")
@@ -140,6 +141,7 @@ dev.off()
 ## LOD and Exposure Summary Table
 ```{r}
 load("NHANES_Exposures_Clean.RData")
+dat <- df %>% filter(!is.na(RIDAGEYR) & sexFlag == 0) 
 
 lod <- read.csv("NHANES_LODs.csv")
 lod <- lod %>% filter(pfas_flag == "")
@@ -152,11 +154,14 @@ nhanesDesign <- svydesign(id = ~SDMVPSU,  # Primary Sampling Units (PSU)
                           nest    = TRUE,      # Whether PSUs are nested within strata
                           data    = df)
 
+# subset to true reported age and sex-mismatch removed sample
+nhanesDesign <- subset(nhanesDesign, !is.na(RIDAGEYR) & sexFlag == 0)
+
 counter = 0
 for(i in 1:length(varlist)){
   
   cur_exposure <- varlist[i]
-  df_sub <- df
+  df_sub <- dat
   
   # create new variable name for easier model specs
   nhanesDesign[["variables"]]$cur_measure <- unlist(nhanesDesign[["variables"]][varlist[i]]) 
@@ -210,6 +215,7 @@ write.xlsx(fullsum, file="Manuscript/NHANES_ExWAS_EAA_SupplementalTables.xlsx",
 0 overlap between some measures. Dataset category labels added manually after. 
 ```{r}
 load("NHANES_Exposures_Clean.RData")
+df <- df %>% filter(!is.na(RIDAGEYR) & sexFlag == 0) 
 lod <- read.csv("NHANES_LODs.csv")
 lod <- lod %>% filter(keep == "Keep"  & pfas_flag == "")
 varlist <- lod$Exposure
@@ -335,7 +341,7 @@ a <- spl$GrimAge_AA %>%
   theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
   ylab(bquote(bold(-log[10](p~value)))) + 
   theme(legend.position = "bottom", legend.title = element_blank()) + 
-  scale_x_continuous(limits = c(-1.4, 2.00)) + 
+  scale_x_continuous(limits = c(-1.4, 2.33)) + 
   scale_y_continuous(limits = c(0, 9)) + 
   scale_color_lancet() + 
   geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
@@ -344,7 +350,7 @@ a <- spl$GrimAge_AA %>%
   geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
             aes(x = ifelse(exposuretag == "LBXBCD" | exposuretag == "URDUCD", 
                            Estimate - 0.5, Estimate + 0.1), 
-                y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.1 + (-log10(pval)), 
+                y = ifelse(exposuretag == "LBX118LA", -0.08 + (-log10(pval)), 
                                          0.18 + (-log10(pval))),  
                 label=Variable.Description, color = Dataset), 
             hjust = 0, 
@@ -365,15 +371,15 @@ b <- spl$GrimAge_AA %>%
   theme_bw() + xlab("Expected Change in Epigenetic Age Acceleration") + 
   ylab(bquote(bold(-log[10](p~value)))) + 
   theme(legend.position = "bottom", legend.title = element_blank()) + 
-  scale_x_continuous(limits = c(-1.4, 2.00)) + 
+  scale_x_continuous(limits = c(-1.4, 2.33)) + 
   scale_y_continuous(limits = c(0, 9)) + 
   scale_color_lancet() + 
   geom_hline(yintercept = -log10(0.05/(63)), linetype = "dashed") + 
   geom_vline(xintercept = 0, linetype = "dashed") + 
   ggtitle("GrimAge: Cell-Adjusted Models") + 
   geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
-            aes(x = ifelse(exposuretag == "LBXBCD", 
-                           Estimate - 0.3, Estimate + 0.1), 
+            aes(x = ifelse(exposuretag == "LBXBCD" | exposuretag == "URDUCD", 
+                           Estimate - 0.55, Estimate + 0.08), 
                 y = ifelse(exposuretag == "LBX118LA", -0.1 + (-log10(pval)), 
                                          0.15 + (-log10(pval))),  
                 label=Variable.Description, color = Dataset), 
@@ -833,8 +839,8 @@ a <- spl$GrimAge2_AA %>%
   ggtitle("GrimAge2: No Cell-Adjustment") + 
   geom_text(data=subset(spl$GrimAge2_AA, exposuretag != ""),
             aes(x = ifelse(exposuretag == "LBXBCD" | exposuretag == "URDUCD", 
-                           Estimate - 0.7, Estimate + 0.1), 
-                y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.1 + (-log10(pval)), 
+                           Estimate - 0.74, Estimate + 0.1), 
+                y = ifelse(exposuretag == "LBX118LA", -0.1 + (-log10(pval)), 
                                          0.2 + (-log10(pval))),  
                 label=Variable.Description, color = Dataset), 
             hjust = 0, 
@@ -861,7 +867,8 @@ b <- spl$GrimAge2_AA %>%
   geom_vline(xintercept = 0, linetype = "dashed") + 
   ggtitle("GrimAge2: Cell-Adjusted Models") + 
   geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
-            aes(x = ifelse(exposuretag == "LBXBCD", Estimate - 0.3, Estimate + 0.1), 
+            aes(x = ifelse(exposuretag == "LBXBCD" | exposuretag == "URDUCD", Estimate - 0.74, 
+                           Estimate + 0.1), 
                 y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.1 + (-log10(pval)), 
                                          0.18 + (-log10(pval))),  
                 label=Variable.Description, color = Dataset), 
@@ -889,7 +896,8 @@ c <- spl$DunedinPoAm %>%
   geom_vline(xintercept = 0, linetype = "dashed") + 
   ggtitle("DunedinPoAm: No Cell-Adjustment") + 
   geom_text(data=subset(spl$DunedinPoAm, exposuretag != ""),
-            aes(x = ifelse(exposuretag == "LBXBCD", Estimate - 0.007, Estimate + 0.001), 
+            aes(x = ifelse(exposuretag == "LBXBCD" | exposuretag == "URDUCD", 
+                           Estimate - 0.007, Estimate + 0.001), 
                 y = ifelse(exposuretag == "LBX118LA" | exposuretag == "LBXBPB", -0.001 + (-log10(pval)), 
                                          0.18 + (-log10(pval))),  
                 label=Variable.Description, color = Dataset), 
@@ -1246,14 +1254,14 @@ a1 <- spl$GrimAge_AA %>%
   ylab(bquote(bold(-log[10](p~value)))) + 
   theme(legend.position = "bottom", legend.title = element_blank()) + 
   scale_color_lancet() + 
-  scale_y_continuous(limits = c(0, 5)) + 
+  scale_y_continuous(limits = c(0, 5.5)) + 
   geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
   geom_vline(xintercept = 0, linetype = "dashed") + 
   ggtitle("GrimAge: No Cell-Adjustment") + 
   geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
             aes(x = Estimate, y = -log10(pval),  
                 label=Variable.Description, color = Dataset), 
-            hjust = 0, nudge_x = -0.1, 
+            hjust = 0, nudge_x = -0.4, 
             nudge_y = -0.1, 
             show.legend = FALSE)  + 
   theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
@@ -1274,14 +1282,14 @@ b1 <- spl$GrimAge_AA %>%
   ylab(bquote(bold(-log[10](p~value)))) + 
   theme(legend.position = "bottom", legend.title = element_blank()) + 
   scale_color_lancet() + 
-  scale_y_continuous(limits = c(0, 5)) + 
+  scale_y_continuous(limits = c(0, 5.5)) + 
   geom_hline(yintercept = -log10(0.05/(64)), linetype = "dashed") + 
   geom_vline(xintercept = 0, linetype = "dashed") + 
   ggtitle("GrimAge: Cell-Adjusted Models") + 
   geom_text(data=subset(spl$GrimAge_AA, exposuretag != ""),
             aes(x = Estimate, y = -log10(pval),  
                 label=Variable.Description, color = Dataset), 
-            hjust = 0, nudge_x = -0.1, 
+            hjust = 0, nudge_x = -0.4, 
             nudge_y = -0.1, 
             show.legend = FALSE) + 
   theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
@@ -1308,7 +1316,7 @@ a <- spl$GrimAge2_AA %>%
   geom_text(data=subset(spl$GrimAge2_AA, exposuretag != ""),
             aes(x = Estimate, y = -log10(pval),  
                 label=Variable.Description, color = Dataset), 
-            hjust = 0, nudge_x = -0.1*(max(spl$GrimAge2_AA$Estimate) - min(spl$GrimAge2_AA$Estimate)), 
+            hjust = 0, nudge_x = -0.2*(max(spl$GrimAge2_AA$Estimate) - min(spl$GrimAge2_AA$Estimate)), 
             nudge_y = -0.1, 
             show.legend = FALSE) + 
   theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
@@ -1363,7 +1371,7 @@ c <- spl$DunedinPoAm %>%
             aes(x = Estimate, y = -log10(pval),  
                 label=Variable.Description, color = Dataset), 
             hjust = 0, nudge_x = -0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
-            nudge_y = 0.1*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
+            nudge_y = 0.2*(max(spl$DunedinPoAm$Estimate) - min(spl$DunedinPoAm$Estimate)), 
             show.legend = FALSE) + 
   theme(plot.title = element_text(hjust = 0.5, face="bold", size = 12), 
         axis.text = element_text(face="bold", size = 12), 
