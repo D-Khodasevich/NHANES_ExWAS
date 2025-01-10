@@ -222,22 +222,34 @@ dict$Dataset <- c(rep("Demographics", nrow(dictlist_99$DEMO)),
 dict <- dict %>% rename(exposure = Variable.Name)
 rm(list = setdiff(ls(), c("df", "dict")))
 
-# calculate acceleration measures
-## subset to participants who are not labeled as 85 years of age
-df <- df %>% filter(RIDAGEYR != 85) ## subset to complete clock data (half of clock dataset not actually profiled)
+# create sex-mismatch flag
+df$sexFlag <- ifelse(df$XY_Estimation == 1 & df$RIAGENDR == "Female", 0, 
+                     ifelse(df$XY_Estimation == 2 & df$RIAGENDR == "Male", 0, 1))
+# replace top-coded participant ages with NA
+df$RIDAGEYR <- ifelse(df$RIDAGEYR == 85, NA, df$RIDAGEYR)
+
+# filter dataset to those with DNAm measures
 df <- df %>% filter(!is.na(HorvathAge))
+
+# calculate acceleration measures in a new subset df
+## subset to participants who are not labeled as 85 years of age, and remove sex-mismatches
+ea_sub <- df %>% filter(!is.na(RIDAGEYR) & sexFlag == 0) 
+df$DunedinPoAm <- NULL
 ## only considering following clocks for analysis
 ## "HorvathAge","HannumAge","SkinBloodAge","PhenoAge",
 ## "GrimAgeMort","GrimAge2Mort","HorvathTelo", "DunedinPoAm" 
-df$Horvath_AA <- resid(glm(df$HorvathAge ~ df$RIDAGEYR))
-df$Hannum_AA <- resid(glm(df$HannumAge ~ df$RIDAGEYR))
-df$SkinBlood_AA <- resid(glm(df$SkinBloodAge ~ df$RIDAGEYR))
-df$PhenoAge_AA <- resid(glm(df$PhenoAge ~ df$RIDAGEYR))
-df$GrimAge_AA <- resid(glm(df$GrimAgeMort ~ df$RIDAGEYR))
-df$GrimAge2_AA <- resid(glm(df$GrimAge2Mort ~ df$RIDAGEYR))
-df$HorvathTelo_AA <- resid(glm(df$HorvathTelo ~ df$RIDAGEYR))
+ea_sub$Horvath_AA <- resid(glm(ea_sub$HorvathAge ~ ea_sub$RIDAGEYR))
+ea_sub$Hannum_AA <- resid(glm(ea_sub$HannumAge ~ ea_sub$RIDAGEYR))
+ea_sub$SkinBlood_AA <- resid(glm(ea_sub$SkinBloodAge ~ ea_sub$RIDAGEYR))
+ea_sub$PhenoAge_AA <- resid(glm(ea_sub$PhenoAge ~ ea_sub$RIDAGEYR))
+ea_sub$GrimAge_AA <- resid(glm(ea_sub$GrimAgeMort ~ ea_sub$RIDAGEYR))
+ea_sub$GrimAge2_AA <- resid(glm(ea_sub$GrimAge2Mort ~ ea_sub$RIDAGEYR))
+ea_sub$HorvathTelo_AA <- resid(glm(ea_sub$HorvathTelo ~ ea_sub$RIDAGEYR))
 ### leaving DunedinPoAm untransformed
-
+ea_sub <- ea_sub %>% select(SEQN, Horvath_AA, Hannum_AA, SkinBlood_AA, PhenoAge_AA, 
+                            GrimAge_AA, GrimAge2_AA, HorvathTelo_AA, DunedinPoAm)
+# rejoin with main dataset
+df <- left_join(df, ea_sub, by = "SEQN")
 
 # add recoded occupation (coding based on white v blue collar coding)
 occ_1999 <- read_xpt("OCQ.XPT")
