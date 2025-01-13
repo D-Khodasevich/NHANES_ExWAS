@@ -1687,3 +1687,136 @@ dev.off()
 ```
 
 
+# Sensitivity - Check Associations with Diet
+```{r}
+library(tidyverse)
+library(tableone)
+library(Metrics)
+library(gridExtra)
+
+load("NHANES_Exposures_Clean.RData")
+df <- df %>% filter(!is.na(RIDAGEYR) & sexFlag == 0) 
+
+# specific meat and dairy 
+diet_1999 <- haven::read_xpt("Exploratory/DBQ.XPT")    # specific questions only present in 1999 cycle
+diet_1999 <- diet_1999 %>% filter(SEQN %in% df$SEQN) %>% select(SEQN, DBD270A, DBD270B)
+table(subset(diet_1999, DBD270A < 20)$DBD270A)
+table(subset(diet_1999, DBD270B < 20)$DBD270B)
+df <- left_join(df, diet_1999, by = "SEQN")
+df <- df %>% 
+  mutate(protein = ifelse(DBD270A == 0, 0, 
+                   ifelse(DBD270A >= 1 & DBD270A < 3, 1, 
+                   ifelse(DBD270A >= 3, 2, NA))), 
+         dairy = ifelse(DBD270B == 0, 0, 
+                   ifelse(DBD270B >= 1 & DBD270B < 3, 1, 
+                   ifelse(DBD270B >= 3, 2, NA))))
+
+ggplot(df, aes(x = factor(protein), y = LBX118LA)) + 
+  geom_boxplot()
+ggplot(df, aes(x = factor(dairy), y = LBX118LA)) + 
+  geom_boxplot()
+fit <- glm(LBX118LA ~ factor(protein), data = df); summary(fit)
+fit <- glm(LBX118LA ~ factor(dairy), data = df); summary(fit)
+
+
+
+
+# dairy intake (DBD195, DBD196)
+d1 <- haven::read_xpt("Exploratory/DBQ.XPT") 
+d2 <- haven::read_xpt("Exploratory/DBQ_B.XPT") 
+d1 <- d1 %>% select(SEQN, DBD195)
+d2 <- d2 %>% rename(DBD195 = DBD196) %>% select(SEQN, DBD195)
+d <- rbind(d1, d2)
+df <- left_join(df, d, by = "SEQN")
+table(df$DBD195)
+fit <- glm(log2(LBX118LA) ~ factor(DBD195), data = subset(df, DBD195 < 4)); summary(fit)
+fit <- glm(log2(LBXD05LA) ~ factor(DBD195), data = subset(df, DBD195 < 4)); summary(fit)
+
+
+# overall protein intake (DBD270A: only reported in 1999)
+d1 <- haven::read_xpt("Exploratory/DBQ.XPT") 
+d1 <- d1 %>% select(SEQN, DBD270A) %>% mutate(protein_cat = ifelse(DBD270A == 0, 0, 
+                   ifelse(DBD270A >= 1 & DBD270A < 3, 1, 
+                   ifelse(DBD270A >= 3, 2, NA))))
+df <- left_join(df, d1, by = "SEQN")
+fit <- glm(log2(LBX118LA) ~ factor(protein_cat), data = df); summary(fit)
+fit <- glm(log2(LBXD05LA) ~ factor(protein_cat), data = df); summary(fit)
+
+
+# fish intake (DRQ360, DRD360)
+d1 <- haven::read_xpt("Exploratory/DRXTOT.XPT") 
+d2 <- haven::read_xpt("Exploratory/DRXTOT_B.XPT") 
+d1 <- d1 %>% select(SEQN, DRQ360)
+d2 <- d2 %>% rename(DRQ360 = DRD360) %>% select(SEQN, DRQ360)
+d <- rbind(d1, d2)
+df <- left_join(df, d, by = "SEQN")
+fit <- glm(log2(LBX118LA) ~ factor(DRQ360), data = subset(df, DBD195 < 3)); summary(fit)
+fit <- glm(log2(LBXD05LA) ~ factor(DRQ360), data = subset(df, DBD195 < 3)); summary(fit)
+
+```
+
+Include fish consumption as a covariate
+```{r}
+library(haven)
+library(tidyverse)
+library(Metrics)
+library(gridExtra)
+library(survey)
+library(forcats)
+library(ggsci)
+library(stringi)
+set.seed(999)
+load("NHANES_Exposures_Clean.RData")
+
+# ensure proper coding of covariates
+df$RIAGENDR <- as.factor(df$RIAGENDR)      # sex
+df$RIDRETH1 <- as.factor(df$RIDRETH1)      # race/ethnicity cat
+df$EDUCATION <- as.factor(df$EDUCATION)    # Education cat
+df$OCCUPATION <- as.factor(df$OCCUPATION)  # occupation cat
+df$SMOKE_3cat <- as.factor(df$SMOKE_3cat)  # self-reported smoking
+df$INDFMPIR <- as.numeric(df$INDFMPIR)     # poverty income ratio
+
+# explicitly set reference groups for factors
+df$RIAGENDR <- relevel(df$RIAGENDR, ref = "Male")
+df$RIDRETH1 <- relevel(df$RIDRETH1, ref = "Non-Hispanic White")
+df$EDUCATION <- relevel(df$EDUCATION, ref = "Less Than High School")
+df$OCCUPATION <- relevel(df$OCCUPATION, ref = "lowblue")
+df$SMOKE_3cat <- relevel(df$SMOKE_3cat, ref = "Never")
+
+# fish intake (DRQ360, DRD360)
+d1 <- haven::read_xpt("Exploratory/DRXTOT.XPT") 
+d2 <- haven::read_xpt("Exploratory/DRXTOT_B.XPT") 
+d1 <- d1 %>% select(SEQN, DRQ360)
+d2 <- d2 %>% rename(DRQ360 = DRD360) %>% select(SEQN, DRQ360)
+d <- rbind(d1, d2)
+df <- left_join(df, d, by = "SEQN")
+
+# specify survey design
+nhanesDesign <- svydesign(id = ~SDMVPSU,  # Primary Sampling Units (PSU)
+                          strata  = ~SDMVSTRA, # Stratification used in the survey
+                          weights = ~WTDN4YR,   # Survey weights (using those from DNAm dataset)
+                          nest    = TRUE,      # Whether PSUs are nested within strata
+                          data    = df)
+
+# subset to true reported age and sex-mismatch removed sample
+nhanesDesign <- subset(nhanesDesign, !is.na(RIDAGEYR) & sexFlag == 0)
+
+# create new variable name for easier model specs
+nhanesDesign[["variables"]]$cur_measure <- unlist(nhanesDesign[["variables"]]["LBX118LA"]) 
+nhanesDesign[["variables"]]$cur_measure <- as.numeric(nhanesDesign[["variables"]]$cur_measure)
+nhanesDesign[["variables"]]$cur_measure_scale <- log2(nhanesDesign[["variables"]]$cur_measure)
+nhanesDesign[["variables"]]$cur_measure_scale <- as.vector(scale(
+  nhanesDesign[["variables"]]$cur_measure_scale, center = TRUE, scale = TRUE))
+
+weighted_model <- svyglm(GrimAge_AA ~ cur_measure_scale + 
+                       RIDAGEYR + I(RIDAGEYR^2) + RIAGENDR + EDUCATION + OCCUPATION + 
+                         RIDRETH1 + BMXBMI + INDFMPIR + LBXCOT + DBD195, 
+                         design = nhanesDesign, family = gaussian())
+summary(weighted_model)
+
+
+fit <- glm(log2(LBX118LA) ~ factor(DRQ360), data = subset(df, DBD195 < 3)); summary(fit)
+fit <- glm(log2(LBXD05LA) ~ factor(DRQ360), data = subset(df, DBD195 < 3)); summary(fit)
+
+```
+

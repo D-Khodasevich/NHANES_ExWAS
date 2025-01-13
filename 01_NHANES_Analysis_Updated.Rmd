@@ -382,23 +382,54 @@ nhanesDesign[["variables"]]$cur_measure_scale <- log2(nhanesDesign[["variables"]
 nhanesDesign[["variables"]]$cur_measure_scale <- as.vector(scale(nhanesDesign[["variables"]]$cur_measure_scale, 
                                                    center = TRUE, scale = TRUE))
 
+# grimage
 weighted_model <- svyglm(GrimAge_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
                            RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
                          design = subset(nhanesDesign, SMOKE_3cat == "Never"), family = gaussian())
 summary(weighted_model)
-confint(weighted_model, 2)
 
 weighted_model <- svyglm(GrimAge_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
                            RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
                          design = subset(nhanesDesign, SMOKE_3cat == "Former"), family = gaussian())
 summary(weighted_model)
-confint(weighted_model, 2)
 
 weighted_model <- svyglm(GrimAge_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
                            RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
                          design = subset(nhanesDesign, SMOKE_3cat == "Current"), family = gaussian())
 summary(weighted_model)
-confint(weighted_model, 2)
+
+# grimage 2
+weighted_model <- svyglm(GrimAge2_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Never"), family = gaussian())
+summary(weighted_model)
+
+weighted_model <- svyglm(GrimAge2_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Former"), family = gaussian())
+summary(weighted_model)
+
+weighted_model <- svyglm(GrimAge2_AA ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Current"), family = gaussian())
+summary(weighted_model)
+
+
+# DunedinPoAm
+weighted_model <- svyglm(DunedinPoAm ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Never"), family = gaussian())
+summary(weighted_model)
+
+weighted_model <- svyglm(DunedinPoAm ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Former"), family = gaussian())
+summary(weighted_model)
+
+weighted_model <- svyglm(DunedinPoAm ~ cur_measure_scale + RIDAGEYR + I(RIDAGEYR^2) + 
+                           RIAGENDR + EDUCATION + OCCUPATION + RIDRETH1 + BMXBMI + INDFMPIR, 
+                         design = subset(nhanesDesign, SMOKE_3cat == "Current"), family = gaussian())
+summary(weighted_model)
 
 
 ```
